@@ -123,6 +123,8 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--green)}
     <button class="nb" onclick="nav('imp',this)"><i class="ti ti-file-invoice"></i> Obligaciones</button>
     <button class="nb" onclick="nav('ag',this)"><i class="ti ti-calendar"></i> Agenda</button>
     <button class="nb" onclick="nav('cob',this)"><i class="ti ti-receipt"></i> Cobranzas</button>
+    <button class="nb" onclick="nav('vto',this)"><i class="ti ti-table"></i> Vencimientos</button>
+    <button class="nb" onclick="nav('bkp',this)"><i class="ti ti-database-export"></i> Respaldo</button>
   </div>
 </div>
 <div class="content">
@@ -222,6 +224,46 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--green)}
 </div>
 </div>
 
+<!-- RESPALDO -->
+<div id="sec-bkp" class="sec">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+
+    <div class="card">
+      <div class="ch"><span class="ct"><i class="ti ti-download"></i> Exportar datos</span></div>
+      <p style="font-size:13px;color:var(--txt2);margin-bottom:16px;line-height:1.6">Descargá un archivo <b>.json</b> con todos los datos del sistema: clientes, obligaciones asignadas, recibos y vencimientos configurados. Guardalo en tu computadora o en Drive como respaldo.</p>
+      <div id="bkp-stats" style="margin-bottom:16px"></div>
+      <button class="btn btnp" onclick="exportarDatos()"><i class="ti ti-download"></i> Descargar respaldo</button>
+    </div>
+
+    <div class="card">
+      <div class="ch"><span class="ct"><i class="ti ti-upload"></i> Importar datos</span></div>
+      <p style="font-size:13px;color:var(--txt2);margin-bottom:16px;line-height:1.6">Restaurá un respaldo anterior. <b>Atención:</b> esto reemplaza todos los datos actuales del sistema con los del archivo importado.</p>
+      <div style="margin-bottom:12px">
+        <label style="display:block;margin-bottom:6px">Seleccioná el archivo de respaldo (.json)</label>
+        <input type="file" id="imp-file" accept=".json" onchange="previewImport(this)" style="font-size:13px">
+      </div>
+      <div id="imp-preview" style="margin-bottom:12px"></div>
+      <button class="btn" id="btn-importar" onclick="importarDatos()" style="display:none"><i class="ti ti-upload"></i> Confirmar importación</button>
+    </div>
+
+  </div>
+
+  <div class="card" style="margin-top:4px">
+    <div class="ch"><span class="ct"><i class="ti ti-rotate"></i> Restablecer sistema</span></div>
+    <p style="font-size:13px;color:var(--txt2);margin-bottom:14px;line-height:1.6">Borra todos los datos del navegador y vuelve a los valores originales del archivo (clientes y obligaciones del código). Útil si algo se desconfiguró. <b>No afecta los recibos emitidos ni los cambios en GitHub.</b></p>
+    <button class="btn" onclick="resetSistema()" style="color:var(--red);border-color:var(--red)"><i class="ti ti-trash"></i> Restablecer valores originales</button>
+  </div>
+</div>
+
+<!-- VENCIMIENTOS -->
+<div id="sec-vto" class="sec">
+  <div class="ar">
+    <select id="vto-imp" onchange="rVto()" style="max-width:340px"><option value="">-- Seleccionar obligación --</option></select>
+    <input type="text" id="vto-busq" placeholder="Buscar obligación..." oninput="filtrarVtoOpts()" style="max-width:200px">
+  </div>
+  <div id="vto-cont"><div class="es" style="padding-top:40px"><i class="ti ti-table" style="font-size:32px;display:block;margin-bottom:8px;color:var(--txt3)"></i>Seleccioná una obligación para editar sus vencimientos</div></div>
+</div>
+
 <!-- MODALES -->
 <div class="overlay" id="mo-cli">
 <div class="modal">
@@ -308,11 +350,11 @@ function getVto(imp,mes,cuit){
 }
 
 const DEF_IMPS=[
-  {id:'MONOT.',abrev:'MONOT.',desc:'Monotributo',tipo:'arca',arcaKey:'mono',fuente:'ARCA'},
-  {id:'HON_PROF_MONO',abrev:'HON_PROF_MONO',desc:'Honorarios Prof. - Monotributo',tipo:'fijo',dia:8,fuente:'Estudio'},
-  {id:'HON_PROF_RI',abrev:'HON_PROF_RI',desc:'Honorarios Prof. - Resp. Inscripto',tipo:'fijo',dia:8,fuente:'Estudio'},
-  {id:'HON_PROF_LABORAL',abrev:'HON_PROF_LABORAL',desc:'Honorarios Prof. - Laboral',tipo:'fijo',dia:8,fuente:'Estudio'},
-  {id:'HON_PROF_LAB_CP',abrev:'HON_PROF_LAB_CP',desc:'Honorarios Prof. - Casas Particulares',tipo:'fijo',dia:8,fuente:'Estudio'},
+  {id:'MONOT.',abrev:'MONOT.',desc:'Monotributo',tipo:'fijo',dia:20,fuente:'ARCA'},
+  {id:'HON_PROF_MONO',abrev:'HON_PROF_MONO',desc:'Honorarios Prof. - Monotributo',tipo:'fijo',dia:15,fuente:'Estudio'},
+  {id:'HON_PROF_RI',abrev:'HON_PROF_RI',desc:'Honorarios Prof. - Resp. Inscripto',tipo:'fijo',dia:15,fuente:'Estudio'},
+  {id:'HON_PROF_LABORAL',abrev:'HON_PROF_LABORAL',desc:'Honorarios Prof. - Laboral',tipo:'fijo',dia:15,fuente:'Estudio'},
+  {id:'HON_PROF_LAB_CP',abrev:'HON_PROF_LAB_CP',desc:'Honorarios Prof. - Casas Particulares',tipo:'fijo',dia:15,fuente:'Estudio'},
   {id:'IVA',abrev:'IVA',desc:'IVA Mensual (DDJJ y Pago)',tipo:'arca',arcaKey:'iva',fuente:'ARCA'},
   {id:'AUTON.',abrev:'AUTON.',desc:'Autónomos',tipo:'arca',arcaKey:'autonomos',fuente:'ARCA'},
   {id:'931_LSD',abrev:'931_LSD',desc:'F.931 + Libro de Sueldo Digital',tipo:'arca',arcaKey:'empleadores',fuente:'ARCA'},
@@ -365,14 +407,15 @@ function load(){
   try{const r=localStorage.getItem('bo_r');if(r){const d=JSON.parse(r);recs=d.r;rcnt=d.c;}}catch(e){recs=[];rcnt=1;}
   if(imps.length===0){imps=DEF_IMPS.map(x=>({...x}));sI();}
   if(clis.length===0){clis=DEF_CLIS.map(x=>({...x}));sC();}
-  // Set current month in agenda selector
+  loadVto();
   document.getElementById('smes').value=new Date().getMonth();
+  initVtoSelector();
   rAll();
 }
 function sC(){localStorage.setItem('bo_c',JSON.stringify(clis));}
 function sI(){localStorage.setItem('bo_i',JSON.stringify(imps));}
 function sR(){localStorage.setItem('bo_r',JSON.stringify({r:recs,c:rcnt}));}
-function rAll(){rDash();rCli();rImps();rAg();rCob();}
+function rAll(){rDash();rCli();rImps();rAg();rCob();rBkp();}
 
 function rDash(){
   const mes=new Date().getMonth(),hoy=new Date().getDate();
@@ -421,6 +464,7 @@ function rImps(){
   const af=document.getElementById('ag-fi');
   if(af)af.innerHTML='<option value="">Todas las obligaciones</option>'+imps.map(i=>`<option value="${i.id}">${i.abrev}</option>`).join('');
   renderAsig();
+  initVtoSelector();
 }
 
 function renderAsig(){
@@ -638,6 +682,286 @@ function showTab(id,btn){
 }
 function om(id){document.getElementById(id)?.classList.add('open');}
 function cm(id){document.getElementById(id)?.classList.remove('open');}
+
+// ── RESPALDO ─────────────────────────────────────────────────────
+function rBkp(){
+  const el = document.getElementById('bkp-stats');
+  if(!el) return;
+  const totalRec = recs.length;
+  const totalCli = clis.length;
+  const conObl = clis.filter(c=>(c.imps||[]).length>0).length;
+  const fecha = new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  el.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+      <div class="metric"><div class="ml">Clientes</div><div class="mv" style="font-size:18px">${totalCli}</div></div>
+      <div class="metric"><div class="ml">Con obligaciones</div><div class="mv g" style="font-size:18px">${conObl}</div></div>
+      <div class="metric"><div class="ml">Recibos emitidos</div><div class="mv g" style="font-size:18px">${totalRec}</div></div>
+    </div>
+    <p style="font-size:11px;color:var(--txt2);margin-top:8px"><i class="ti ti-clock"></i> Última consulta: ${fecha}</p>`;
+}
+
+function exportarDatos(){
+  const datos = {
+    version: '1.0',
+    fecha: new Date().toISOString(),
+    estudio: 'BO Estudio Contable',
+    clientes: clis,
+    obligaciones: imps,
+    recibos: { r: recs, c: rcnt },
+    vencimientos: VTO
+  };
+  const json = JSON.stringify(datos, null, 2);
+  const blob = new Blob([json], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const fecha = new Date().toISOString().slice(0,10);
+  a.href = url;
+  a.download = `bo-estudio-respaldo-${fecha}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+let datosParaImportar = null;
+
+function previewImport(input){
+  const file = input.files[0];
+  if(!file){ return; }
+  const reader = new FileReader();
+  reader.onload = function(e){
+    try{
+      const datos = JSON.parse(e.target.result);
+      datosParaImportar = datos;
+      const preview = document.getElementById('imp-preview');
+      const btn = document.getElementById('btn-importar');
+      if(!datos.clientes || !datos.obligaciones){
+        preview.innerHTML = '<div style="color:var(--red);font-size:13px"><i class="ti ti-alert-circle"></i> Archivo inválido — no es un respaldo de BO Estudio.</div>';
+        btn.style.display = 'none';
+        return;
+      }
+      const fecha = datos.fecha ? new Date(datos.fecha).toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}) : 'desconocida';
+      preview.innerHTML = `
+        <div style="background:var(--bg2);border-radius:var(--rad);padding:12px;font-size:13px">
+          <div style="font-weight:500;margin-bottom:6px"><i class="ti ti-file-check" style="color:var(--green)"></i> Archivo válido</div>
+          <div style="color:var(--txt2)">Fecha del respaldo: <b style="color:var(--txt)">${fecha}</b></div>
+          <div style="color:var(--txt2)">Clientes: <b style="color:var(--txt)">${datos.clientes.length}</b></div>
+          <div style="color:var(--txt2)">Obligaciones: <b style="color:var(--txt)">${datos.obligaciones.length}</b></div>
+          <div style="color:var(--txt2)">Recibos: <b style="color:var(--txt)">${datos.recibos?.r?.length||0}</b></div>
+          <div style="margin-top:8px;padding:8px;background:var(--amber-l);border-radius:var(--rad);color:var(--amber);font-size:12px">
+            <i class="ti ti-alert-triangle"></i> Esto reemplazará todos los datos actuales del sistema.
+          </div>
+        </div>`;
+      btn.style.display = 'inline-flex';
+    } catch(err){
+      document.getElementById('imp-preview').innerHTML = '<div style="color:var(--red);font-size:13px"><i class="ti ti-alert-circle"></i> Error al leer el archivo. Verificá que sea un respaldo válido.</div>';
+      document.getElementById('btn-importar').style.display = 'none';
+    }
+  };
+  reader.readAsText(file);
+}
+
+function importarDatos(){
+  if(!datosParaImportar){ return; }
+  if(!confirm('¿Confirmás la importación? Se reemplazarán todos los datos actuales.')) return;
+  clis = datosParaImportar.clientes;
+  imps = datosParaImportar.obligaciones;
+  if(datosParaImportar.recibos){ recs = datosParaImportar.recibos.r; rcnt = datosParaImportar.recibos.c; }
+  if(datosParaImportar.vencimientos){ VTO = datosParaImportar.vencimientos; }
+  sC(); sI(); sR(); localStorage.setItem('bo_vto', JSON.stringify(VTO));
+  datosParaImportar = null;
+  document.getElementById('imp-file').value = '';
+  document.getElementById('imp-preview').innerHTML = '';
+  document.getElementById('btn-importar').style.display = 'none';
+  rAll();
+  alert('Importación completada ✓ Los datos fueron restaurados.');
+}
+
+function resetSistema(){
+  if(!confirm('¿Seguro? Esto borra todos los cambios guardados en este navegador y vuelve a los valores originales del archivo.')) return;
+  localStorage.removeItem('bo_c');
+  localStorage.removeItem('bo_i');
+  localStorage.removeItem('bo_r');
+  localStorage.removeItem('bo_vto');
+  clis=[]; imps=[]; recs=[]; rcnt=1; VTO={};
+  load();
+  alert('Sistema restablecido ✓');
+}
+
+// ── VENCIMIENTOS EDITOR ──────────────────────────────────────────
+// Tabla universal: todos los impuestos, 12 meses x 3 grupos CUIT
+// Estructura: bo_vto[impId][mes][grupo] = dia (número) o null
+// Para impuestos de día fijo: los 3 grupos tienen el mismo valor
+// Para obligaciones manuales: quedan en null
+
+let VTO = {}; // tabla editable en memoria
+
+function loadVto(){
+  try{
+    const s = localStorage.getItem('bo_vto');
+    if(s) VTO = JSON.parse(s);
+  } catch(e){ VTO = {}; }
+  // Poblar con defaults para impuestos que no tengan entrada aún
+  imps.forEach(imp => {
+    if(!VTO[imp.id]) VTO[imp.id] = buildDefaultVto(imp);
+  });
+}
+
+function buildDefaultVto(imp){
+  // Genera 12 meses x 3 grupos a partir de la config actual del impuesto
+  const tabla = [];
+  for(let m=0; m<12; m++){
+    if(imp.tipo === 'arca' && VARCA[imp.arcaKey]){
+      const fila = VARCA[imp.arcaKey][m] || [null,null,null];
+      tabla.push([fila[0]??null, fila[1]??null, fila[2]??null]);
+    } else if(imp.tipo === 'fijo' && imp.dia){
+      tabla.push([imp.dia, imp.dia, imp.dia]);
+    } else {
+      tabla.push([null, null, null]);
+    }
+  }
+  return tabla;
+}
+
+function saveVto(){
+  // Sincronizar VTO de vuelta a VARCA e imps.dia para que la agenda use los nuevos valores
+  imps.forEach(imp => {
+    if(!VTO[imp.id]) return;
+    if(imp.tipo === 'arca' && VARCA[imp.arcaKey]){
+      for(let m=0; m<12; m++){
+        VARCA[imp.arcaKey][m] = VTO[imp.id][m] ? [...VTO[imp.id][m]] : [null,null,null];
+      }
+    }
+    if(imp.tipo === 'fijo'){
+      // Usar el grupo 0 del mes 0 como referencia para día fijo (igual en todos)
+      const primerDia = VTO[imp.id].find(fila => fila[0] !== null)?.[0];
+      if(primerDia) imp.dia = primerDia;
+    }
+  });
+  localStorage.setItem('bo_vto', JSON.stringify(VTO));
+  sI(); // guardar imps actualizados
+  rAg(); // refrescar agenda
+  alert('Vencimientos guardados ✓ La agenda fue actualizada.');
+}
+
+function initVtoSelector(){
+  poblarVtoSelector('');
+}
+
+function poblarVtoSelector(q){
+  const s = document.getElementById('vto-imp');
+  if(!s) return;
+  const fil = q ? imps.filter(i => i.abrev.toLowerCase().includes(q) || i.desc.toLowerCase().includes(q)) : imps;
+  const actual = s.value;
+  s.innerHTML = '<option value="">-- Seleccionar obligación --</option>' +
+    fil.map(i => `<option value="${i.id}" ${i.id===actual?'selected':''}>${i.abrev} — ${i.desc}</option>`).join('');
+}
+
+function filtrarVtoOpts(){
+  const q = (document.getElementById('vto-busq')?.value||'').toLowerCase();
+  poblarVtoSelector(q);
+}
+
+function rVto(){
+  const id = document.getElementById('vto-imp')?.value;
+  const cont = document.getElementById('vto-cont');
+  if(!id){ cont.innerHTML='<div class="es" style="padding-top:40px"><i class="ti ti-table" style="font-size:32px;display:block;margin-bottom:8px;color:var(--txt3)"></i>Seleccioná una obligación para editar sus vencimientos</div>'; return; }
+
+  const imp = imps.find(x=>x.id===id);
+  if(!imp) return;
+
+  // Asegurar que VTO tenga entrada para este impuesto
+  if(!VTO[id]) VTO[id] = buildDefaultVto(imp);
+
+  const esFijo = imp.tipo === 'fijo';
+  const esManual = imp.tipo === 'manual';
+
+  let html = `<div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px">
+      <div>
+        <div style="font-size:15px;font-weight:500">${imp.abrev} — ${imp.desc}</div>
+        <div style="font-size:12px;color:var(--txt2);margin-top:3px">
+          ${esFijo ? 'Día fijo — podés editar el día para cada mes individualmente' : esManual ? 'Obligación manual — cargá los días que correspondan' : 'Vencimiento por terminación de CUIT — editá cada grupo por separado'}
+        </div>
+      </div>
+      <button class="btn btnp bsm" onclick="saveVto()"><i class="ti ti-device-floppy"></i> Guardar cambios</button>
+    </div>`;
+
+  if(esFijo){
+    // Para día fijo: una sola columna "Día" pero podés personalizar por mes
+    html += `<div style="overflow-x:auto"><table style="min-width:320px">
+      <thead><tr>
+        <th style="width:130px">Mes</th>
+        <th><span class="badge bb">Día de vencimiento</span></th>
+        <th style="font-size:11px;color:var(--txt2)">Aplica igual para todos los CUITs</th>
+      </tr></thead><tbody>`;
+    MESES.forEach((mes,mi)=>{
+      const dia = VTO[id][mi]?.[0] ?? '';
+      html += `<tr>
+        <td style="font-weight:500;font-size:13px">${mes}</td>
+        <td><input type="number" min="1" max="31"
+          value="${dia}" placeholder="—"
+          style="width:80px;text-align:center;padding:5px 8px;font-size:13px"
+          oninput="setVtoFijo('${id}',${mi},this.value)"></td>
+        <td style="font-size:11px;color:var(--txt2)">CUIT 0–9</td>
+      </tr>`;
+    });
+    html += `</tbody></table></div>`;
+  } else {
+    // Para ARCA y manuales: 3 columnas por terminación de CUIT
+    html += `<div style="overflow-x:auto"><table style="min-width:480px">
+      <thead><tr>
+        <th style="width:120px">Mes</th>
+        <th><span class="badge bb">CUIT 0–3</span></th>
+        <th><span class="badge bg">CUIT 4–6</span></th>
+        <th><span class="badge bp">CUIT 7–9</span></th>
+      </tr></thead><tbody>`;
+    MESES.forEach((mes,mi)=>{
+      const fila = VTO[id][mi] || [null,null,null];
+      html += `<tr><td style="font-weight:500;font-size:13px">${mes}</td>`;
+      [0,1,2].forEach(gi=>{
+        const v = fila[gi]!==null&&fila[gi]!==undefined ? fila[gi] : '';
+        html += `<td><input type="number" min="1" max="31"
+          value="${v}" placeholder="—"
+          style="width:70px;text-align:center;padding:5px 8px;font-size:13px"
+          oninput="setVtoGrupo('${id}',${mi},${gi},this.value)"></td>`;
+      });
+      html += `</tr>`;
+    });
+    html += `</tbody></table></div>`;
+  }
+
+  html += `<div style="margin-top:14px;padding:10px 12px;background:var(--bg2);border-radius:var(--rad);font-size:12px;color:var(--txt2)">
+    <i class="ti ti-info-circle"></i> Dejá el campo vacío si la obligación no vence ese mes. Los cambios se aplican a la agenda al guardar.
+  </div></div>`;
+
+  cont.innerHTML = html;
+}
+
+function setVtoFijo(id, mes, val){
+  if(!VTO[id]) return;
+  const d = val===''||val===null ? null : parseInt(val);
+  VTO[id][mes] = [d, d, d]; // mismo día para los 3 grupos
+}
+
+function setVtoGrupo(id, mes, grupo, val){
+  if(!VTO[id]) return;
+  if(!VTO[id][mes]) VTO[id][mes] = [null,null,null];
+  VTO[id][mes][grupo] = val===''||val===null ? null : parseInt(val);
+}
+
+// Override getVto para usar la tabla VTO editable
+function getVto(imp, mes, cuit){
+  const g = cg(cuit);
+  if(VTO[imp.id] && VTO[imp.id][mes]){
+    const d = VTO[imp.id][mes][g];
+    return d !== null && d !== undefined ? d : null;
+  }
+  // Fallback al comportamiento original
+  if(imp.tipo==='arca' && VARCA[imp.arcaKey]){
+    return VARCA[imp.arcaKey][mes] ? VARCA[imp.arcaKey][mes][g] : null;
+  }
+  if(imp.tipo==='fijo') return imp.dia||null;
+  return null;
+}
 
 load();
 </script>
