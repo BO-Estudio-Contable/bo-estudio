@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BO Estudio Contable</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#ffffff;--bg2:#f7f7f5;--bg3:#f0ede8;
+  --txt:#1a1a1a;--txt2:#6b6b6b;--txt3:#9a9a9a;
+  --bdr:rgba(0,0,0,0.12);--bdr2:rgba(0,0,0,0.2);
+  --green:#1D9E75;--green-d:#0F6E56;--green-l:#E1F5EE;--green-lt:#0F6E56;
+  --amber:#BA7517;--amber-l:#FAEEDA;
+  --red:#A32D2D;--red-l:#FCEBEB;
+  --blue:#185FA5;--blue-l:#E6F1FB;
+  --purple:#534AB7;--purple-l:#EEEDFE;
+  --rad:8px;--rad-lg:12px;
+  color-scheme:light dark;
+}
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:#1c1c1e;--bg2:#2c2c2e;--bg3:#3a3a3c;
+    --txt:#f2f2f7;--txt2:#aeaeb2;--txt3:#636366;
+    --bdr:rgba(255,255,255,0.12);--bdr2:rgba(255,255,255,0.2);
+    --green:#34c88a;--green-d:#27a573;--green-l:#0d3326;--green-lt:#34c88a;
+    --amber:#ffa040;--amber-l:#3a2800;
+    --red:#ff6b6b;--red-l:#3a1010;
+    --blue:#4fa3f7;--blue-l:#0d2240;
+    --purple:#a29bfe;--purple-l:#1e1a40;
+  }
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg3);color:var(--txt);min-height:100vh}
+.app{display:flex;flex-direction:column;min-height:100vh;max-width:1200px;margin:0 auto;background:var(--bg);box-shadow:0 0 40px rgba(0,0,0,.1)}
+.hdr{background:var(--bg);border-bottom:0.5px solid var(--bdr);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;position:sticky;top:0;z-index:50}
+.logo{font-size:18px;font-weight:600;color:var(--txt)}.logo span{color:var(--green)}
+.nav{display:flex;gap:3px;background:var(--bg2);border-radius:var(--rad);padding:3px;flex-wrap:wrap}
+.nb{padding:6px 12px;border:none;background:transparent;border-radius:6px;cursor:pointer;font-size:13px;color:var(--txt2);transition:all .15s;white-space:nowrap;display:flex;align-items:center;gap:5px}
+.nb.active{background:var(--bg);color:var(--txt);font-weight:500;border:0.5px solid var(--bdr)}
+.nb:hover:not(.active){background:var(--bg3)}
+.content{flex:1;padding:20px}
+.sec{display:none}.sec.active{display:block}
+.card{background:var(--bg);border:0.5px solid var(--bdr);border-radius:var(--rad-lg);padding:1rem 1.25rem;margin-bottom:12px}
+.ch{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.ct{font-size:14px;font-weight:500}
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px}
+.metric{background:var(--bg2);border-radius:var(--rad);padding:12px}
+.ml{font-size:11px;color:var(--txt2);margin-bottom:4px}
+.mv{font-size:22px;font-weight:600}
+.mv.g{color:var(--green-lt)}.mv.a{color:var(--amber)}.mv.r{color:var(--red)}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:8px 10px;border-bottom:0.5px solid var(--bdr);color:var(--txt2);font-weight:500;font-size:12px;white-space:nowrap}
+td{padding:8px 10px;border-bottom:0.5px solid var(--bdr);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg2)}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500;margin:1px}
+.bg{background:var(--green-l);color:var(--green-lt)}
+.ba{background:var(--amber-l);color:var(--amber)}
+.br{background:var(--red-l);color:var(--red)}
+.bb{background:var(--blue-l);color:var(--blue)}
+.bgr{background:var(--bg2);color:var(--txt2)}
+.bp{background:var(--purple-l);color:var(--purple)}
+.btn{padding:7px 14px;border-radius:var(--rad);border:0.5px solid var(--bdr2);background:var(--bg);color:var(--txt);cursor:pointer;font-size:13px;transition:all .15s;display:inline-flex;align-items:center;gap:5px}
+.btn:hover{background:var(--bg2)}
+.btnp{background:var(--green)!important;border-color:var(--green)!important;color:#fff!important}
+.btnp:hover{background:var(--green-d)!important}
+.bsm{padding:4px 9px;font-size:12px}
+.ar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.fg{display:flex;flex-direction:column;gap:4px}
+.fg2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.fgf{grid-column:1/-1}
+label{font-size:12px;color:var(--txt2);font-weight:500}
+input,select,textarea{padding:7px 10px;border:0.5px solid var(--bdr2);border-radius:var(--rad);background:var(--bg);color:var(--txt);font-size:13px;width:100%}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--green)}
+.overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:200;align-items:flex-start;justify-content:center;padding:40px 16px;overflow-y:auto}
+.overlay.open{display:flex}
+.modal{background:var(--bg);border-radius:var(--rad-lg);border:0.5px solid var(--bdr);padding:20px;width:100%;max-width:580px;margin:auto}
+.mt{font-size:16px;font-weight:500;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center}
+.ma{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+.es{text-align:center;padding:32px;color:var(--txt2);font-size:13px}
+.vr{display:flex;align-items:center;gap:8px;padding:8px;border-left:3px solid var(--green);background:var(--bg2);border-radius:0 var(--rad) var(--rad) 0;margin-bottom:5px}
+.vr.urg{border-left-color:var(--red)}
+.vf{font-size:18px;font-weight:600;color:var(--green-lt);min-width:28px;text-align:center}
+.vr.urg .vf{color:var(--red)}
+.vi{flex:1}.vn{font-size:13px;font-weight:500}.vs{font-size:11px;color:var(--txt2)}
+.igrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:5px;margin-top:4px;max-height:200px;overflow-y:auto;padding:2px}
+.ic{display:flex;align-items:center;gap:5px;padding:5px 9px;border:0.5px solid var(--bdr);border-radius:var(--rad);cursor:pointer;font-size:12px;background:var(--bg2);transition:all .1s}
+.ic input[type=checkbox]{width:auto;cursor:pointer}
+.ic.sel{border-color:var(--green);background:var(--green-l);color:var(--green-lt)}
+.tabs{display:flex;gap:4px;margin-bottom:16px;border-bottom:0.5px solid var(--bdr)}
+.tab{padding:8px 16px;font-size:13px;cursor:pointer;border-bottom:2px solid transparent;color:var(--txt2);background:none;border-top:none;border-left:none;border-right:none;transition:all .15s}
+.tab.active{border-bottom-color:var(--green);color:var(--green-lt);font-weight:500}
+.tp{display:none}.tp.active{display:block}
+.notice{background:var(--amber-l);border:0.5px solid var(--amber);border-radius:var(--rad);padding:10px 14px;font-size:13px;color:var(--amber);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.notice a{color:var(--amber);font-weight:500}
+.rp{border:0.5px solid var(--bdr);border-radius:var(--rad-lg);padding:18px}
+.rh{text-align:center;border-bottom:0.5px solid var(--bdr);padding-bottom:12px;margin-bottom:12px}
+.rrow{display:flex;justify-content:space-between;padding:5px 0;font-size:13px;border-bottom:0.5px solid var(--bdr)}
+.rrow:last-of-type{border:none}
+.rtot{display:flex;justify-content:space-between;padding:10px 0 0;font-weight:600;font-size:15px;border-top:0.5px solid var(--bdr2);margin-top:6px}
+.rb{background:var(--bg2);border-radius:var(--rad);padding:12px;font-size:12px;line-height:1.7;white-space:pre-wrap;margin-bottom:8px;border:0.5px solid var(--bdr)}
+.asig-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:4px;max-height:240px;overflow-y:auto;padding:4px 0}
+.asig-item{display:flex;align-items:center;gap:6px;padding:5px 8px;border:0.5px solid var(--bdr);border-radius:var(--rad);cursor:pointer;font-size:12px;transition:background .1s}
+.asig-item:hover{background:var(--bg2)}
+@media(max-width:600px){
+  .fg2{grid-template-columns:1fr}
+  .fgf{grid-column:1}
+  .nav{gap:2px}
+  .nb{padding:5px 8px;font-size:11px}
+  .content{padding:12px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="hdr">
+  <div class="logo"><span>BO</span> Estudio Contable</div>
+  <div class="nav">
+    <button class="nb active" onclick="nav('dash',this)"><i class="ti ti-layout-dashboard"></i> Inicio</button>
+    <button class="nb" onclick="nav('cli',this)"><i class="ti ti-users"></i> Clientes</button>
+    <button class="nb" onclick="nav('imp',this)"><i class="ti ti-file-invoice"></i> Obligaciones</button>
+    <button class="nb" onclick="nav('ag',this)"><i class="ti ti-calendar"></i> Agenda</button>
+    <button class="nb" onclick="nav('cob',this)"><i class="ti ti-receipt"></i> Cobranzas</button>
+  </div>
+</div>
+<div class="content">
+
+<!-- DASHBOARD -->
+<div id="sec-dash" class="sec active">
+  <div class="metrics" id="met"></div>
+  <div id="sinasig-n"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+    <div class="card"><div class="ch"><span class="ct"><i class="ti ti-alert-circle"></i> Próximos vencimientos</span></div><div id="pvtos"></div></div>
+    <div class="card"><div class="ch"><span class="ct"><i class="ti ti-clock"></i> Últimos recibos</span></div><div id="urec"></div></div>
+  </div>
+</div>
+
+<!-- CLIENTES -->
+<div id="sec-cli" class="sec">
+  <div class="ar">
+    <button class="btn btnp" onclick="openMC()"><i class="ti ti-plus"></i> Nuevo cliente</button>
+    <input type="text" id="busq" placeholder="Buscar nombre o CUIT..." oninput="rCli()" style="max-width:220px">
+    <select id="fil-iva" onchange="rCli()" style="max-width:180px">
+      <option value="">Todos los clientes</option>
+      <option value="Monotributista">Monotributistas</option>
+      <option value="Responsable Inscripto">Resp. Inscriptos</option>
+      <option value="sinasig">Sin obligaciones</option>
+    </select>
+    <span id="cli-cnt" style="font-size:12px;color:var(--txt2)"></span>
+  </div>
+  <div class="card"><div class="tw"><table>
+    <thead><tr><th>Nombre / Razón social</th><th>CUIT</th><th>Condición</th><th>Email</th><th>Obligaciones</th><th></th></tr></thead>
+    <tbody id="tcli"></tbody>
+  </table></div></div>
+</div>
+
+<!-- OBLIGACIONES -->
+<div id="sec-imp" class="sec">
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('cat',this)">Catálogo</button>
+    <button class="tab" onclick="showTab('masiv',this)">Asignación masiva</button>
+  </div>
+  <div id="tp-cat" class="tp active">
+    <div class="ar"><button class="btn btnp" onclick="openMI()"><i class="ti ti-plus"></i> Nueva obligación</button></div>
+    <div class="card"><div class="tw"><table>
+      <thead><tr><th>Código</th><th>Descripción</th><th>Vencimiento</th><th>Organismo</th><th></th></tr></thead>
+      <tbody id="timp"></tbody>
+    </table></div></div>
+  </div>
+  <div id="tp-masiv" class="tp">
+    <div class="card">
+      <div class="ch"><span class="ct">Asignar obligación a múltiples clientes</span></div>
+      <div class="fg2" style="margin-bottom:14px">
+        <div class="fg"><label>Obligación a asignar</label><select id="as-i"><option value="">-- Seleccionar --</option></select></div>
+        <div class="fg"><label>Filtrar clientes</label>
+          <select id="as-f" onchange="renderAsig()">
+            <option value="">Todos</option><option value="Monotributista">Monotributistas</option>
+            <option value="Responsable Inscripto">Resp. Inscriptos</option><option value="sinasig">Sin obligaciones</option>
+          </select>
+        </div>
+      </div>
+      <div id="asig-l"></div>
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+        <button class="btn bsm" onclick="selAll(true)">Seleccionar todos</button>
+        <button class="btn bsm" onclick="selAll(false)">Deseleccionar todos</button>
+        <button class="btn btnp bsm" onclick="applyAsig()"><i class="ti ti-check"></i> Aplicar asignación</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- AGENDA -->
+<div id="sec-ag" class="sec">
+  <div class="ar">
+    <select id="smes" onchange="rAg()" style="max-width:150px">
+      <option value="0">Enero</option><option value="1">Febrero</option><option value="2">Marzo</option>
+      <option value="3">Abril</option><option value="4">Mayo</option><option value="5">Junio</option>
+      <option value="6">Julio</option><option value="7">Agosto</option><option value="8">Septiembre</option>
+      <option value="9">Octubre</option><option value="10">Noviembre</option><option value="11">Diciembre</option>
+    </select>
+    <input type="text" id="ag-q" placeholder="Filtrar cliente..." oninput="rAg()" style="max-width:180px">
+    <select id="ag-fi" onchange="rAg()" style="max-width:180px"><option value="">Todas las obligaciones</option></select>
+    <button class="btn" onclick="genRec()"><i class="ti ti-brand-whatsapp"></i> Generar recordatorios</button>
+    <span id="ag-tot" style="font-size:12px;color:var(--txt2)"></span>
+  </div>
+  <div id="ag-cont"></div>
+</div>
+
+<!-- COBRANZAS -->
+<div id="sec-cob" class="sec">
+  <div class="ar">
+    <button class="btn btnp" onclick="openMR()"><i class="ti ti-plus"></i> Nuevo recibo</button>
+    <input type="text" id="cob-q" placeholder="Buscar recibo..." oninput="rCob()" style="max-width:200px">
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+    <div class="card"><div class="ch"><span class="ct">Historial de recibos</span></div><div id="lrec"></div></div>
+    <div class="card"><div class="ch"><span class="ct">Vista previa</span></div><div id="rprev"><div class="es">Seleccioná un recibo para ver el detalle</div></div></div>
+  </div>
+</div>
+</div>
+</div>
+
+<!-- MODALES -->
+<div class="overlay" id="mo-cli">
+<div class="modal">
+  <div class="mt"><span id="mc-t">Nuevo cliente</span><button class="btn bsm" onclick="cm('mo-cli')"><i class="ti ti-x"></i></button></div>
+  <div class="fg2">
+    <div class="fg fgf"><label>Nombre / Razón social *</label><input id="c-n" type="text" placeholder="Ej: GARCIA LAURA"></div>
+    <div class="fg"><label>CUIT *</label><input id="c-c" type="text" placeholder="20-12345678-9"></div>
+    <div class="fg"><label>Condición IVA</label>
+      <select id="c-i"><option>Monotributista</option><option>Responsable Inscripto</option><option>Consumidor Final</option><option>Exento</option></select>
+    </div>
+    <div class="fg fgf"><label>Email</label><input id="c-e" type="email" placeholder="cliente@mail.com"></div>
+    <div class="fg fgf"><label>WhatsApp (sin 0 ni 15)</label><input id="c-w" type="text" placeholder="Ej: 3456123456"></div>
+    <div class="fg fgf"><label>Obligaciones asignadas</label><div class="igrid" id="ci-chk"></div></div>
+  </div>
+  <div class="ma"><button class="btn" onclick="cm('mo-cli')">Cancelar</button><button class="btn btnp" onclick="saveCli()">Guardar cliente</button></div>
+</div></div>
+
+<div class="overlay" id="mo-imp">
+<div class="modal" style="max-width:500px">
+  <div class="mt"><span id="mi-t">Nueva obligación</span><button class="btn bsm" onclick="cm('mo-imp')"><i class="ti ti-x"></i></button></div>
+  <div class="fg2">
+    <div class="fg"><label>Código / Abreviatura *</label><input id="i-a" type="text" placeholder="Ej: TASA_CHA"></div>
+    <div class="fg"><label>Tipo de vencimiento</label>
+      <select id="i-t" onchange="togDia()">
+        <option value="fijo">Día fijo del mes</option>
+        <option value="arca">Calendario ARCA (por CUIT)</option>
+        <option value="manual">Manual / Sin fecha fija</option>
+      </select>
+    </div>
+    <div class="fg fgf"><label>Descripción completa *</label><input id="i-d" type="text" placeholder="Ej: Tasa Higiene Comercial Chajarí"></div>
+    <div class="fg" id="i-dia-w"><label>Día fijo del mes</label><input id="i-dia" type="number" min="1" max="31" placeholder="Ej: 20"></div>
+    <div class="fg" id="i-arca-w" style="display:none"><label>Clave ARCA</label>
+      <select id="i-ak">
+        <option value="mono">Monotributo</option><option value="iva">IVA</option>
+        <option value="autonomos">Autónomos</option><option value="empleadores">Empleadores/F.931</option>
+        <option value="ganancias_soc">Ganancias Sociedades</option><option value="ganancias_ph">Ganancias PH</option>
+        <option value="conv_mult">Convenio Multilateral</option><option value="bienes_pers">Bienes Personales</option>
+      </select>
+    </div>
+    <div class="fg"><label>Organismo</label>
+      <select id="i-f"><option value="ARCA">ARCA / AFIP</option><option value="Municipal">Municipal</option><option value="Provincial">Provincial (ER)</option><option value="Estudio">Honorarios Estudio</option><option value="Otro">Otro</option></select>
+    </div>
+  </div>
+  <div class="ma"><button class="btn" onclick="cm('mo-imp')">Cancelar</button><button class="btn btnp" onclick="saveImp()">Guardar obligación</button></div>
+</div></div>
+
+<div class="overlay" id="mo-rec">
+<div class="modal" style="max-width:500px">
+  <div class="mt"><span>Nuevo recibo de cobranza</span><button class="btn bsm" onclick="cm('mo-rec')"><i class="ti ti-x"></i></button></div>
+  <div class="fg2">
+    <div class="fg fgf"><label>Cliente</label><select id="r-c" onchange="loadRI()"><option value="">-- Seleccionar cliente --</option></select></div>
+    <div class="fg fgf"><label>Obligación</label><select id="r-i"><option value="">-- Seleccionar --</option></select></div>
+    <div class="fg"><label>Período (mes/año)</label><input id="r-p" type="text" placeholder="06/2026"></div>
+    <div class="fg"><label>Importe ($)</label><input id="r-m" type="number" placeholder="0.00" step="0.01"></div>
+    <div class="fg fgf"><label>Observaciones (opcional)</label><input id="r-o" type="text" placeholder="Ej: incluye recargo"></div>
+  </div>
+  <div class="ma"><button class="btn" onclick="cm('mo-rec')">Cancelar</button><button class="btn btnp" onclick="saveRec()">Emitir recibo</button></div>
+</div></div>
+
+<div class="overlay" id="mo-recs">
+<div class="modal" style="max-width:620px">
+  <div class="mt"><span id="recs-t">Recordatorios del mes</span><button class="btn bsm" onclick="cm('mo-recs')"><i class="ti ti-x"></i></button></div>
+  <div id="recs-c" style="max-height:60vh;overflow-y:auto"></div>
+  <div class="ma"><button class="btn" onclick="cm('mo-recs')">Cerrar</button></div>
+</div></div>
+
+<script>
+const MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const VARCA={
+  mono:[[5,6,7],[5,6,9],[5,6,9],[6,7,8],[5,6,7],[5,8,9],[6,7,8],[5,6,7],[7,8,9],[5,6,7],[5,9,10],[9,10,11]],
+  iva:[[13,14,15],[13,18,19],[13,16,17],[13,14,15],[13,14,15],[16,17,18],[13,14,15],[13,14,18],[14,15,16],[13,14,15],[13,16,17],[14,15,16]],
+  autonomos:[[5,6,7],[5,6,9],[5,6,9],[6,7,8],[5,6,7],[5,8,9],[6,7,8],[5,6,7],[7,8,9],[5,6,7],[5,9,10],[9,10,11]],
+  empleadores:[[9,12,13],[9,10,11],[9,10,11],[9,10,13],[11,12,13],[9,10,11],[13,14,15],[10,11,12],[9,10,11],[9,13,14],[9,10,11],[9,10,11]],
+  ganancias_soc:[[13,14,15],[13,18,19],[13,16,17],[13,14,15],[13,14,15],[16,17,18],[13,14,15],[13,14,18],[14,15,16],[13,14,15],[13,16,17],[14,15,16]],
+  ganancias_ph:[[null,null,null],[null,null,null],[null,null,null],[null,null,null],[null,null,null],[11,12,16],[null,null,null],[null,null,null],[null,null,null],[null,null,null],[null,null,null],[null,null,null]],
+  conv_mult:[[15,16,19],[13,18,19],[13,16,17],[15,16,17],[15,18,19],[16,17,18],[15,16,17],[14,18,19],[15,16,17],[15,16,19],[13,16,17],[15,16,17]],
+  bienes_pers:[[13,14,15],[13,18,19],[13,16,17],[13,14,15],[13,14,15],[11,12,16],[13,14,15],[13,14,18],[14,15,16],[13,14,15],[13,16,17],[14,15,16]],
+};
+function cg(cuit){const s=cuit.replace(/\D/g,''),l=parseInt(s.slice(-1));return l<=3?0:l<=6?1:2;}
+function getVto(imp,mes,cuit){
+  if(imp.tipo==='arca'&&VARCA[imp.arcaKey]){const g=cg(cuit);return VARCA[imp.arcaKey][mes]?VARCA[imp.arcaKey][mes][g]:null;}
+  if(imp.tipo==='fijo')return imp.dia||null;
+  return null;
+}
+
+const DEF_IMPS=[
+  {id:'MONOT.',abrev:'MONOT.',desc:'Monotributo',tipo:'arca',arcaKey:'mono',fuente:'ARCA'},
+  {id:'HON_PROF_MONO',abrev:'HON_PROF_MONO',desc:'Honorarios Prof. - Monotributo',tipo:'fijo',dia:8,fuente:'Estudio'},
+  {id:'HON_PROF_RI',abrev:'HON_PROF_RI',desc:'Honorarios Prof. - Resp. Inscripto',tipo:'fijo',dia:8,fuente:'Estudio'},
+  {id:'HON_PROF_LABORAL',abrev:'HON_PROF_LABORAL',desc:'Honorarios Prof. - Laboral',tipo:'fijo',dia:8,fuente:'Estudio'},
+  {id:'HON_PROF_LAB_CP',abrev:'HON_PROF_LAB_CP',desc:'Honorarios Prof. - Casas Particulares',tipo:'fijo',dia:8,fuente:'Estudio'},
+  {id:'IVA',abrev:'IVA',desc:'IVA Mensual (DDJJ y Pago)',tipo:'arca',arcaKey:'iva',fuente:'ARCA'},
+  {id:'AUTON.',abrev:'AUTON.',desc:'Autónomos',tipo:'arca',arcaKey:'autonomos',fuente:'ARCA'},
+  {id:'931_LSD',abrev:'931_LSD',desc:'F.931 + Libro de Sueldo Digital',tipo:'arca',arcaKey:'empleadores',fuente:'ARCA'},
+  {id:'GAN.PER.FIS.',abrev:'GAN.PER.FIS.',desc:'Ganancias Personas Físicas',tipo:'arca',arcaKey:'ganancias_ph',fuente:'ARCA'},
+  {id:'GAN.SOC.',abrev:'GAN.SOC.',desc:'Ganancias Sociedades',tipo:'arca',arcaKey:'ganancias_soc',fuente:'ARCA'},
+  {id:'CONV.MULT.',abrev:'CONV.MULT.',desc:'Convenio Multilateral',tipo:'arca',arcaKey:'conv_mult',fuente:'ARCA'},
+  {id:'CONV.MULT.DJ',abrev:'CONV.MULT.DJ',desc:'Convenio Multilateral (DDJJ Anual)',tipo:'manual',fuente:'ARCA'},
+  {id:'SER.DOM.OBL.',abrev:'SER.DOM.OBL.',desc:'Servicio Doméstico Obligatorio',tipo:'fijo',dia:10,fuente:'ARCA'},
+  {id:'PL.ERIOS',abrev:'PL.ERIOS',desc:'Profesiones Liberales Entre Ríos',tipo:'fijo',dia:16,fuente:'Provincial'},
+  {id:'IB.LOC.ERIOS',abrev:'IB.LOC.ERIOS',desc:'Ingresos Brutos Entre Ríos',tipo:'fijo',dia:18,fuente:'Provincial'},
+  {id:'TASA CHAJARI',abrev:'TASA CHAJARI',desc:'Tasa Higiene Comercial Chajarí',tipo:'fijo',dia:20,fuente:'Municipal'},
+  {id:'TASA CONCORDIA',abrev:'TASA CONCORDIA',desc:'Tasa Comercial Concordia',tipo:'fijo',dia:20,fuente:'Municipal'},
+  {id:'TASA_CHA_RIV',abrev:'TASA_CHA_RIV',desc:'Tasa Higiene Chajarí - Rivadavia',tipo:'fijo',dia:20,fuente:'Municipal'},
+  {id:'TASA_CHA_URQ',abrev:'TASA_CHA_URQ',desc:'Tasa Higiene Chajarí - Urquiza',tipo:'fijo',dia:20,fuente:'Municipal'},
+  {id:'TASA_CHA_MLIC',abrev:'TASA_CHA_MLIC',desc:'Tasa Higiene Chajarí - M. Lic.',tipo:'fijo',dia:20,fuente:'Municipal'},
+  {id:'TASA_CHA_PELU',abrev:'TASA_CHA_PELU',desc:'Tasa Higiene Chajarí - Peluquería',tipo:'fijo',dia:20,fuente:'Municipal'},
+  {id:'TASA_CHA_SAR',abrev:'TASA_CHA_SAR',desc:'Tasa Higiene Chajarí - Sarmiento',tipo:'fijo',dia:20,fuente:'Municipal'},
+  {id:'TASA_CHA_1DEM',abrev:'TASA_CHA_1DEM',desc:'Tasa Higiene Chajarí - 1 de Mayo',tipo:'fijo',dia:20,fuente:'Municipal'},
+  {id:'TASA_CHA_9DEJ',abrev:'TASA_CHA_9DEJ',desc:'Tasa Higiene Chajarí - 9 de Julio',tipo:'fijo',dia:20,fuente:'Municipal'},
+  {id:'TASA_CHA_SFE',abrev:'TASA_CHA_SFE',desc:'Tasa Higiene Chajarí - Sta. Fe',tipo:'fijo',dia:20,fuente:'Municipal'},
+  {id:'TASA_CHA_HELA',abrev:'TASA_CHA_HELA',desc:'Tasa Higiene Chajarí - H. Lagos',tipo:'fijo',dia:20,fuente:'Municipal'},
+  {id:'TASA_FED_25DEM',abrev:'TASA_FED_25DEM',desc:'Tasa Federación - 25 de Mayo',tipo:'fijo',dia:20,fuente:'Municipal'},
+  {id:'TASA_FED_BEL',abrev:'TASA_FED_BEL',desc:'Tasa Federación - Belgrano',tipo:'fijo',dia:20,fuente:'Municipal'},
+  {id:'INF.FISC',abrev:'INF.FISC',desc:'Presentación Única de Balances (PUB)',tipo:'manual',fuente:'ARCA'},
+  {id:'PYME_ACC.PART.SOC.',abrev:'PYME_ACC',desc:'PYME Acciones y Participaciones',tipo:'manual',fuente:'ARCA'},
+  {id:'LEYSOC_FATSA 1',abrev:'LEYSOC_FATSA 1',desc:'Leyes Sociales - FATSA 1%',tipo:'fijo',dia:10,fuente:'Provincial'},
+  {id:'LEYSOC_FATSA 2',abrev:'LEYSOC_FATSA 2',desc:'Leyes Sociales - FATSA 2%',tipo:'fijo',dia:10,fuente:'Provincial'},
+  {id:'LEYSOC_GAS_1',abrev:'LEYSOC_GAS_1',desc:'Leyes Sociales - Gastronómicos 1',tipo:'fijo',dia:10,fuente:'Provincial'},
+  {id:'LEYSOC_GAS_2',abrev:'LEYSOC_GAS_2',desc:'Leyes Sociales - Gastronómicos 2',tipo:'fijo',dia:10,fuente:'Provincial'},
+  {id:'LEYSOC_GAS_3',abrev:'LEYSOC_GAS_3',desc:'Leyes Sociales - Gastronómicos 3',tipo:'fijo',dia:10,fuente:'Provincial'},
+  {id:'LEYSOC_MOS-SIND',abrev:'LEYSOC_MOS-SIND',desc:'Leyes Sociales - Mosaístas Sindicato',tipo:'fijo',dia:10,fuente:'Provincial'},
+  {id:'LEYSOC_MOS-SEG',abrev:'LEYSOC_MOS-SEG',desc:'Leyes Sociales - Mosaístas Seguro',tipo:'fijo',dia:10,fuente:'Provincial'},
+  {id:'LEYSOC_CEC_CHA',abrev:'LEYSOC_CEC_CHA',desc:'Leyes Sociales - Comercio CEC Chajarí',tipo:'fijo',dia:10,fuente:'Provincial'},
+  {id:'LEYSOC_CEC_CON',abrev:'LEYSOC_CEC_CON',desc:'Leyes Sociales - Comercio CEC Concordia',tipo:'fijo',dia:10,fuente:'Provincial'},
+  {id:'LEYSOC_OSECC',abrev:'LEYSOC_OSECC',desc:'Leyes Sociales - OSECC',tipo:'fijo',dia:10,fuente:'Provincial'},
+  {id:'LEYSOC_INCATUR',abrev:'LEYSOC_INCATUR',desc:'Leyes Sociales - INCATUR',tipo:'fijo',dia:10,fuente:'Provincial'},
+  {id:'FAECYS',abrev:'FAECYS',desc:'FAECYS',tipo:'fijo',dia:10,fuente:'Provincial'},
+  {id:'INACAP',abrev:'INACAP',desc:'INACAP',tipo:'fijo',dia:10,fuente:'Provincial'},
+  {id:'ESTRELLA',abrev:'ESTRELLA',desc:'La Estrella (Seguro)',tipo:'fijo',dia:10,fuente:'Provincial'},
+  {id:'SIRADIG',abrev:'SIRADIG',desc:'SIRADIG',tipo:'manual',fuente:'ARCA'},
+];
+
+const DEF_CLIS=[{"id":"c1","nom":"ACEVEDO CINTIA","cuit":"27-39841066-7","iva":"Monotributista","email":"ciinacevedo76@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c2","nom":"ACOSTA CARINA","cuit":"23-30903326-4","iva":"Monotributista","email":"","wsp":"","imps":[]},{"id":"c3","nom":"AGTERBERG ANYELEN","cuit":"27-36389167-0","iva":"Monotributista","email":"an_kuqui15@hotmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c4","nom":"ALMEIDA MARCOS RENE","cuit":"20-18241900-2","iva":"Monotributista","email":"almeydamarcos056@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c5","nom":"ALVEZ YAMILA BEATRIZ","cuit":"27-43701429-4","iva":"Monotributista","email":"yamialvez9@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c6","nom":"ANTUNEZ JESICA","cuit":"27-34015151-3","iva":"Monotributista","email":"antunezjesica@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c7","nom":"AVALOS JOSE ALEJANDRO","cuit":"20-39189411-7","iva":"Monotributista","email":"copeapi@hotmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c8","nom":"BARCELOS ANTONELLA","cuit":"27-37079863-5","iva":"Monotributista","email":"annto.barcelos@hotmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c9","nom":"BARRETO, ALEJANDRO ANDRÉS","cuit":"20-35716321-9","iva":"Monotributista","email":"barreto.alejandro.andres@gmail.com","wsp":"","imps":["MONOT.","PL.ERIOS","SER.DOM.OBL."]},{"id":"c10","nom":"BARRETO, CAROLINA PAULA","cuit":"27-22246248-2","iva":"Monotributista","email":"","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c11","nom":"BARRETO, MATIAS SEBASTIAN","cuit":"20-42263926-9","iva":"Monotributista","email":"matibarreto_1999@hotmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c12","nom":"BARRIOS CAMILA","cuit":"27-41630520-5","iva":"Monotributista","email":"cami2025.cb@gmail.com","wsp":"","imps":[]},{"id":"c13","nom":"BARTH, GISELA LORENA","cuit":"27-40161251-9","iva":"Monotributista","email":"giselabarth97@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c14","nom":"BARTH, GUILLERMO HERNAN","cuit":"20-34678924-8","iva":"Responsable Inscripto","email":"barthvictor70@gmail.com","wsp":"","imps":["HON_PROF_RI","IVA","AUTON.","GAN.PER.FIS.","CONV.MULT.DJ","CONV.MULT."]},{"id":"c15","nom":"BENITEZ PAOLA ALEJANDRA","cuit":"27-29079632-1","iva":"Monotributista","email":"paobenitez_29@hotmail.com","wsp":"","imps":[]},{"id":"c16","nom":"BERMANI, MARCOS EXEQUIEL","cuit":"20-40805402-9","iva":"Monotributista","email":"bermanimarcos@gmail.com","wsp":"","imps":[]},{"id":"c17","nom":"BERTA CECILIA","cuit":"27-31758393-7","iva":"Monotributista","email":"mcbcecib@gmail.com","wsp":"","imps":["LEYSOC_FATSA 2","HON_PROF_LABORAL","HON_PROF_MONO","MONOT.","LEYSOC_FATSA 1","PL.ERIOS","931_LSD"]},{"id":"c18","nom":"BIANCARDI MARCELA","cuit":"27-26088729-2","iva":"Monotributista","email":"","wsp":"","imps":[]},{"id":"c19","nom":"BIANCHINI, ANGEL MATIAS","cuit":"23-28196134-9","iva":"Monotributista","email":"bunkergrafica@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c20","nom":"BORDON, JOSE MANUEL","cuit":"20-37563199-8","iva":"Responsable Inscripto","email":"anisaindumentariainfantil@gmail.com","wsp":"","imps":["HON_PROF_RI","AUTON.","IVA","GAN.PER.FIS.","TASA CHAJARI","CONV.MULT.DJ","CONV.MULT."]},{"id":"c21","nom":"BRARDA, MARIA ROSA","cuit":"27-14104106-7","iva":"Monotributista","email":"institutomaryschool@gmail.com","wsp":"","imps":["TASA_CHA_URQ","HON_PROF_MONO","MONOT.","TASA_CHA_RIV"]},{"id":"c22","nom":"BRUTOMESO MARIA LAURA","cuit":"27-33927642-6","iva":"Monotributista","email":"cediac2020@gmail.com","wsp":"","imps":["LEYSOC_FATSA 2","HON_PROF_LABORAL","HON_PROF_MONO","MONOT.","LEYSOC_FATSA 1","PL.ERIOS","931_LSD"]},{"id":"c23","nom":"BRUTOMEZO GUILLERMO ELIAS","cuit":"20-34015024-5","iva":"Monotributista","email":"laboratoriobrutomezo@hotmail.com","wsp":"","imps":["PL.ERIOS","MONOT.","HON_PROF_MONO"]},{"id":"c24","nom":"BUZATTO ROMINA ISOLINA","cuit":"27-29770111-3","iva":"Monotributista","email":"eduzarate2021@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c25","nom":"CACERES DIAZ DIEGO FABIAN","cuit":"20-40752814-0","iva":"Monotributista","email":"diegodino@hotmail.com.ar","wsp":"","imps":[]},{"id":"c26","nom":"CALGARO, YOANA INES","cuit":"27-37587010-5","iva":"Monotributista","email":"yoanacalgaro@hotmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c27","nom":"CARABAJAL, MARTIN ALEJANDRO","cuit":"20-41189162-4","iva":"Monotributista","email":"eledenesteticaybienestar@gmail.com","wsp":"","imps":[]},{"id":"c28","nom":"CARDOZO, LORENA BEATRIZ","cuit":"27-23740995-2","iva":"Monotributista","email":"lorecarleg@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c29","nom":"CAROTTA REMO AGUSTIN","cuit":"20-34006740-2","iva":"Monotributista","email":"agustin.carotta@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","AUTON.","SER.DOM.OBL.","PL.ERIOS"]},{"id":"c30","nom":"CIUCCIO, GUSTAVO","cuit":"20-20098611-4","iva":"Monotributista","email":"ciucciogustavo49@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c31","nom":"COSSIGNANI, ANTONELLA","cuit":"27-36609222-1","iva":"Monotributista","email":"","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c32","nom":"CROATINI, AGOSTINA","cuit":"27-38388295-3","iva":"Monotributista","email":"agos.croattini@hotmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c33","nom":"DALPRA, ANDREA VIVIANA","cuit":"27-28195988-9","iva":"Monotributista","email":"indriani_1@hotmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c34","nom":"DALPRAT, MARIA ROSA","cuit":"27-23729178-1","iva":"Monotributista","email":"","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c35","nom":"DEGRACIA MARIA PAULA","cuit":"27-44103522-0","iva":"Monotributista","email":"aberturascalvo.admi@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c36","nom":"DI FRANCESCO SOL","cuit":"27-45047473-3","iva":"Monotributista","email":"martinocamporeg@gmail.com","wsp":"","imps":[]},{"id":"c37","nom":"DIAZ SONIA ITATI","cuit":"23-29107401-4","iva":"Monotributista","email":"soniaitatidiaz@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c38","nom":"CHAVEZ DIEGO ALBERTO","cuit":"20-26862871-2","iva":"Monotributista","email":"diego_chavez13@hotmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c39","nom":"DURANTE OMAR NICOLAS","cuit":"20-37563087-8","iva":"Monotributista","email":"URSU_G@HOTMAIL.COM","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c40","nom":"ESCALANTE, MIRTA SUSANA","cuit":"23-20510579-4","iva":"Monotributista","email":"susanaescalante17@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c41","nom":"ESPINDOLA JUAN RAMON","cuit":"20-23028996-5","iva":"Monotributista","email":"ayelenespin@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c42","nom":"ESQUIVEL MARIA FLORENCIA","cuit":"27-38388336-4","iva":"Monotributista","email":"","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c43","nom":"FARIAS, SOLANGE ARACELI","cuit":"27-35297951-7","iva":"Monotributista","email":"","wsp":"","imps":[]},{"id":"c44","nom":"FARINA NOELI ANABEL","cuit":"27-41796357-5","iva":"Monotributista","email":"noelifarina9@gmail.com","wsp":"","imps":[]},{"id":"c45","nom":"FLORES VIVIANA NOEMI","cuit":"27-36607840-7","iva":"Monotributista","email":"viviananoemiflores100292@gmail.com","wsp":"","imps":[]},{"id":"c46","nom":"FRANZOY CRISTIAN","cuit":"23-31091528-9","iva":"Monotributista","email":"cmfranzoy@gmail.com","wsp":"","imps":[]},{"id":"c47","nom":"FRANZOY MARCELO","cuit":"20-31758394-0","iva":"Monotributista","email":"marcefranzoy1@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c48","nom":"GALARZA PABLO MARTIN","cuit":"20-35716412-6","iva":"Monotributista","email":"","wsp":"","imps":[]},{"id":"c49","nom":"GALEANO, MARIANA ELIZABETH","cuit":"27-34015032-0","iva":"Monotributista","email":"marianaelizabethgaleano@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c50","nom":"GARAT ALVARO RAMON","cuit":"23-37079791-9","iva":"Monotributista","email":"alvarogarat2505@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c51","nom":"GARESIO VALENTINO","cuit":"20-46916227-4","iva":"Monotributista","email":"valentinogaresio2005@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c52","nom":"GIMENEZ GASTON EZEQUIEL","cuit":"20-38054630-3","iva":"Monotributista","email":"C.sgimenezgaston@hotmail.com","wsp":"","imps":[]},{"id":"c53","nom":"GONZALEZ GRACIELA","cuit":"27-25205296-3","iva":"Monotributista","email":"graciela123peluqueria@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c54","nom":"GRAZIANO URSULA","cuit":"27-31569650-5","iva":"Monotributista","email":"ursu_g@hotmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c55","nom":"GRUPO SENDROS HERMANOS SRL","cuit":"30-71629774-4","iva":"Responsable Inscripto","email":"","wsp":"","imps":["HON_PROF_RI","HON_PROF_LABORAL","PYME_ACC.PART.SOC.","IVA","LEYSOC_MOS-SEG","TASA CHAJARI","LEYSOC_MOS-SIND","CONV.MULT.","CONV.MULT.DJ","931_LSD"]},{"id":"c56","nom":"GUIANO MARIA JOSE","cuit":"27-35445393-8","iva":"Monotributista","email":"","wsp":"","imps":["HON_PROF_MONO"]},{"id":"c57","nom":"IMPULSA SAS","cuit":"30-71897174-4","iva":"Responsable Inscripto","email":"aberturascalvo.admi@gmail.com","wsp":"","imps":["IB.LOC.ERIOS","INACAP","HON_PROF_LABORAL","HON_PROF_RI","PYME_ACC.PART.SOC.","IVA","ESTRELLA","LEYSOC_OSECC","INF.FISC","TASA CHAJARI","LEYSOC_CEC_CHA","FAECYS","931_LSD"]},{"id":"c58","nom":"KRUNFLY, YAMILA ANAHI","cuit":"27-28590171-0","iva":"Monotributista","email":"yamilakrunfli@hotmail.com","wsp":"","imps":["PL.ERIOS","MONOT.","HON_PROF_MONO","SER.DOM.OBL."]},{"id":"c59","nom":"LANARO ANALIA NOEMI","cuit":"27-21389676-3","iva":"Monotributista","email":"lanaroanalianoemi@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c60","nom":"LANER FATIMA MARIA AGUSTINA","cuit":"23-39028641-4","iva":"Monotributista","email":"aguslaner@icloud.com","wsp":"","imps":[]},{"id":"c61","nom":"LASCIALANDIA, GERARDO","cuit":"20-29932646-3","iva":"Monotributista","email":"gerardolascialanda@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c62","nom":"LEITES BRIAN ARIEL","cuit":"20-40406110-1","iva":"Monotributista","email":"brianleites24@gmail.com","wsp":"","imps":["IB.LOC.ERIOS","INACAP","HON_PROF_RI","HON_PROF_LABORAL","IVA","ESTRELLA","AUTON.","LEYSOC_OSECC","GAN.PER.FIS.","TASA CHAJARI","LEYSOC_CEC_CHA","FAECYS","931_LSD"]},{"id":"c63","nom":"LEITES HECTOR EMMANUEL","cuit":"20-31837298-6","iva":"Monotributista","email":"emmalei81@hotmail.com","wsp":"","imps":[]},{"id":"c64","nom":"LEITES ROMINA","cuit":"27-28537549-0","iva":"Monotributista","email":"rominaleites72@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c65","nom":"LEONARDELLI AMADA AURORA","cuit":"27-16337970-3","iva":"Monotributista","email":"barthvictor70@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c66","nom":"LEREIS MARIA SOL","cuit":"27-40406331-1","iva":"Monotributista","email":"sollereis@gmail.com","wsp":"","imps":[]},{"id":"c67","nom":"LEYES JULIAN EMILIANO","cuit":"20-39841077-8","iva":"Monotributista","email":"leyesjulian39@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c68","nom":"LORENZATTO MARCOS SEBASTIAN","cuit":"20-41979701-5","iva":"Monotributista","email":"marcoslorenzatto99@gmail.com","wsp":"","imps":[]},{"id":"c69","nom":"LOSCO GUSTAVO","cuit":"20-14730290-9","iva":"Monotributista","email":"","wsp":"","imps":["MONOT."]},{"id":"c70","nom":"LOSCO MARIA JOSE","cuit":"27-31569552-5","iva":"Monotributista","email":"","wsp":"","imps":[]},{"id":"c71","nom":"LUNA FERNANDA SOLEDAD","cuit":"27-35350124-6","iva":"Monotributista","email":"martinocamporeg@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c72","nom":"MACHADO, MARIA FLORENCIA","cuit":"27-34015295-1","iva":"Monotributista","email":"florenciamachado.rentals@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c73","nom":"MARCHESINI ROCIO BELEN","cuit":"27-35445383-0","iva":"Monotributista","email":"rociomarchesini27@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c74","nom":"MARTINEZ, HUGO DANIEL JESÚS","cuit":"20-32505172-9","iva":"Responsable Inscripto","email":"huguitomartinezautomotores@gmail.com","wsp":"","imps":["AUTON.","GAN.PER.FIS.","HON_PROF_RI","IB.LOC.ERIOS","IVA"]},{"id":"c75","nom":"MARZORATTI ALEJANDRO DANIEL","cuit":"20-37079523-2","iva":"Responsable Inscripto","email":"alejandromarzoratti5@gmail.com","wsp":"","imps":["IB.LOC.ERIOS","HON_PROF_RI","IVA","AUTON.","GAN.PER.FIS."]},{"id":"c76","nom":"MARZORATTI, GISELA","cuit":"27-30429360-3","iva":"Monotributista","email":"gisu_marzo@hotmail.com","wsp":"","imps":[]},{"id":"c77","nom":"MASETTO YANINA MARCELA","cuit":"27-31118235-3","iva":"Monotributista","email":"eparts.admi@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c78","nom":"MEDINA, NORBERTO","cuit":"20-17937242-9","iva":"Responsable Inscripto","email":"copeapi@hotmail.com","wsp":"","imps":["IB.LOC.ERIOS","HON_PROF_RI","IVA","AUTON.","GAN.PER.FIS."]},{"id":"c79","nom":"MENSINGUER GONZALO DAVID","cuit":"20-31677869-1","iva":"Responsable Inscripto","email":"mensinguergd@gmail.com","wsp":"","imps":["IB.LOC.ERIOS","HON_PROF_RI","IVA","AUTON.","GAN.PER.FIS.","TASA CONCORDIA"]},{"id":"c80","nom":"MEZA MARIO JAVIER","cuit":"20-30788645-7","iva":"Monotributista","email":"","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c81","nom":"MILANICH, SANTIAGO","cuit":"20-39256135-9","iva":"Monotributista","email":"santiagomilanich@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c82","nom":"MIÑO MILAGROS","cuit":"27-41630559-0","iva":"Monotributista","email":"milagros.mino.99@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c83","nom":"MOREIRA IVAN","cuit":"20-28196305-9","iva":"Monotributista","email":"iem28@hotmail.com","wsp":"","imps":[]},{"id":"c84","nom":"NONINO CINTIA CAROLINA","cuit":"27-38388555-3","iva":"Monotributista","email":"caritononino12@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c85","nom":"OCAMPO LEONARDO MARTIN","cuit":"20-37026509-8","iva":"Responsable Inscripto","email":"martinocamporeg@gmail.com","wsp":"","imps":["IB.LOC.ERIOS","HON_PROF_RI","IVA","AUTON.","GAN.PER.FIS.","TASA CHAJARI"]},{"id":"c86","nom":"OJEDA SONIA","cuit":"27-27443378-2","iva":"Monotributista","email":"soniaannaluz@gmail.com","wsp":"","imps":[]},{"id":"c87","nom":"ORCELLET, MARIA MABEL","cuit":"27-33941382-2","iva":"Monotributista","email":"orcelletmabel@gmail.com","wsp":"","imps":["PL.ERIOS","MONOT."]},{"id":"c88","nom":"ORLOFF MAGDALENA","cuit":"27-32395835-7","iva":"Monotributista","email":"","wsp":"","imps":[]},{"id":"c89","nom":"PADRON JULIANA","cuit":"27-38770578-9","iva":"Monotributista","email":"juliana.padron16@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c90","nom":"PALACIO, JUAN ERNESTO (HIJO)","cuit":"20-42602439-0","iva":"Monotributista","email":"","wsp":"","imps":["TASA_CHA_HELA","HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c91","nom":"PELIQUERO ABELARDO VICENTE","cuit":"20-16173839-6","iva":"Monotributista","email":"angelicadalmaso2017@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c92","nom":"PELIQUERO CARINA","cuit":"27-22881331-7","iva":"Monotributista","email":"peliquerocarina@gmail.com","wsp":"","imps":[]},{"id":"c93","nom":"PENAYO AMAYA, JESÚS DAVID A.","cuit":"20-28650191-6","iva":"Monotributista","email":"jesuspenayoamaya@gmail.com","wsp":"","imps":["HON_PROF_LAB_CP","SIRADIG","SER.DOM.OBL."]},{"id":"c94","nom":"PENONI ANDREA","cuit":"27-26203724-5","iva":"Monotributista","email":"andrea_iam33@hotmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c95","nom":"PEÑALOZA SANTIAGO","cuit":"20-35129531-8","iva":"Monotributista","email":"santiagope18@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c96","nom":"PEREIRA NIDIA DEL CARMEN","cuit":"27-17201605-2","iva":"Monotributista","email":"nidiacolito07@gmail.com","wsp":"","imps":[]},{"id":"c97","nom":"PEREZ CLAUDIA","cuit":"27-24281743-0","iva":"Monotributista","email":"perezclau1999.cb@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c98","nom":"PEZZELATTO GUILLERMO","cuit":"20-35222670-0","iva":"Monotributista","email":"pezzelattoguillermod@hotmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c99","nom":"PEZZELATTO SOLEDAD ELIZABETH","cuit":"27-23729254-0","iva":"Monotributista","email":"pezzelattosoledad@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c100","nom":"PIZZIO JONATAN RAUL","cuit":"20-37975464-4","iva":"Monotributista","email":"jonapizzio@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c101","nom":"POSADAS GUSTAVO ALEJANDRO","cuit":"20-30410844-5","iva":"Monotributista","email":"","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c102","nom":"QUIROZ, ADRIANA","cuit":"27-33483693-8","iva":"Monotributista","email":"mauricio.Stivanello@almundofr.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c103","nom":"QUIROZ, JORGELINA ANDREA","cuit":"27-37064160-4","iva":"Monotributista","email":"hakunamatataeventos23@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c104","nom":"RAMIREZ OSCAR ANDRES","cuit":"20-43294360-8","iva":"Monotributista","email":"gerardolascialanda@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c105","nom":"RIVERO, AGUSTIN R.","cuit":"20-38388214-2","iva":"Monotributista","email":"nitsuga3456@gmail.com","wsp":"","imps":["TASA_CHA_MLIC","TASA_CHA_PELU","HON_PROF_MONO","MONOT."]},{"id":"c106","nom":"ROA LUANA JEANETT","cuit":"27-40257956-6","iva":"Monotributista","email":"roaluanaa79@hotmail.com","wsp":"","imps":[]},{"id":"c107","nom":"RODRIGUEZ MATIAS ANGEL GABRIEL","cuit":"20-41231114-1","iva":"Monotributista","email":"gerardolascialanda@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c108","nom":"ROLDAN ELIAS DANIEL","cuit":"20-35725467-2","iva":"Responsable Inscripto","email":"martinocamporeg@gmail.com","wsp":"","imps":["IB.LOC.ERIOS","HON_PROF_RI","IVA","AUTON.","GAN.PER.FIS."]},{"id":"c109","nom":"ROMERO, BRUNO ALBERTO","cuit":"20-39256180-4","iva":"Monotributista","email":"bruromero6@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c110","nom":"RUIZ DIAZ MARIA MANUELA","cuit":"27-31569613-0","iva":"Monotributista","email":"rodrigosendros@gmail.com","wsp":"","imps":["MONOT."]},{"id":"c111","nom":"RUIZ DIAZ, MARIA VICTORIA","cuit":"27-32505196-0","iva":"Monotributista","email":"rodrigosendros@gmail.com","wsp":"","imps":["MONOT."]},{"id":"c112","nom":"RUIZ DIAZ, SERGIO DAVID","cuit":"20-40161644-7","iva":"Monotributista","email":"davidruizdiaz9i@gmail.com","wsp":"","imps":["IB.LOC.ERIOS","HON_PROF_RI","IVA","AUTON.","GAN.PER.FIS."]},{"id":"c113","nom":"RUIZ DIAZ, WALTER ABEL","cuit":"20-31537123-7","iva":"Monotributista","email":"walter_ruizdiaz1@hotmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c114","nom":"SAMPAYO GUADALUPE","cuit":"27-32087617-1","iva":"Monotributista","email":"guadalupesampayo0@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c115","nom":"SANCHEZ IRMA NOEMI","cuit":"23-30719780-4","iva":"Monotributista","email":"noemisanchez667@yahoo.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c116","nom":"SANCHEZ JOHANA CECILIA","cuit":"27-37545869-7","iva":"Monotributista","email":"","wsp":"","imps":[]},{"id":"c117","nom":"SEGALA, MARIA AGUSTINA","cuit":"27-35716114-8","iva":"Monotributista","email":"agustinasegala@gmail.com","wsp":"","imps":["PL.ERIOS","HON_PROF_MONO","MONOT."]},{"id":"c118","nom":"SENDROS, MAXIMILIANO","cuit":"23-30691273-9","iva":"Monotributista","email":"rodrigosendros@gmail.com","wsp":"","imps":["TASA CONCORDIA","MONOT."]},{"id":"c119","nom":"SENDROS, RODRIGO ROBERTO","cuit":"20-32087671-1","iva":"Responsable Inscripto","email":"rodrigosendros@gmail.com","wsp":"","imps":["INACAP","HON_PROF_RI","HON_PROF_LABORAL","IVA","AUTON.","ESTRELLA","LEYSOC_OSECC","GAN.PER.FIS.","TASA CHAJARI","LEYSOC_CEC_CHA","CONV.MULT.","CONV.MULT.DJ","FAECYS","931_LSD"]},{"id":"c120","nom":"SILVESTRI LUCIANA","cuit":"27-30788818-7","iva":"Monotributista","email":"lucianasilvestri12@gmail.com","wsp":"","imps":["TASA_CHA_SAR","HON_PROF_MONO","MONOT.","TASA_CHA_9DEJ","TASA_CHA_SFE","TASA_CHA_1DEM"]},{"id":"c121","nom":"SOSA ALBARRACIN MARCELO ANDRES","cuit":"20-94813197-9","iva":"Monotributista","email":"elianapampillo176@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c122","nom":"SOSA ELSA BEATRIZ","cuit":"23-29005178-9","iva":"Monotributista","email":"beatrizcrack@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c123","nom":"STIVANELLO, MAURICIO","cuit":"20-35129606-3","iva":"Responsable Inscripto","email":"mauricio.stivanello@almundofr.com","wsp":"","imps":["IB.LOC.ERIOS","HON_PROF_LABORAL","HON_PROF_RI","AUTON.","IVA","LEYSOC_OSECC","GAN.PER.FIS.","LEYSOC_INCATUR","TASA CHAJARI","LEYSOC_CEC_CHA","LEYSOC_CEC_CON","TASA CONCORDIA","FAECYS","931_LSD"]},{"id":"c124","nom":"SUAREZ LUIS ALBERTO","cuit":"20-40161327-8","iva":"Monotributista","email":"luissuarez.serviciospap@gmail.com","wsp":"","imps":[]},{"id":"c125","nom":"TABENI MARIA FERNANDA","cuit":"27-31118116-0","iva":"Monotributista","email":"fernandatab@gmail.com","wsp":"","imps":["PL.ERIOS","MONOT.","HON_PROF_MONO"]},{"id":"c126","nom":"TABENI MARIA INES","cuit":"27-32505165-0","iva":"Monotributista","email":"enriqueta.ropita@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c127","nom":"TOLLER FRANCO CEFERINO","cuit":"20-44283479-3","iva":"Monotributista","email":"franco17toller@gmail.com","wsp":"","imps":[]},{"id":"c128","nom":"TOLLER LUCAS","cuit":"20-37152485-2","iva":"Responsable Inscripto","email":"lucastolller@gmail.com","wsp":"","imps":[]},{"id":"c129","nom":"TONINA MARIANO","cuit":"20-38388249-5","iva":"Monotributista","email":"marianotonina0919@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c130","nom":"TORRES EDUARDO JAVIER","cuit":"23-32184547-9","iva":"Monotributista","email":"vidaltanner@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c131","nom":"TOSI, LIDIA MARÍA EUGENIA","cuit":"27-28333412-6","iva":"Monotributista","email":"jesuspenayoamaya@gmail.com","wsp":"","imps":["PL.ERIOS","HON_PROF_MONO","MONOT."]},{"id":"c132","nom":"UBEDA JUDITH MAGALI","cuit":"23-43113946-4","iva":"Monotributista","email":"anisaindumentariainfantil@gmail.com","wsp":"","imps":[]},{"id":"c133","nom":"VARGAS MARIA MARCELA","cuit":"27-22496392-6","iva":"Monotributista","email":"","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c134","nom":"VEGA, ROXANA","cuit":"23-24487590-4","iva":"Monotributista","email":"vegaroxana768@gmail.com","wsp":"","imps":[]},{"id":"c135","nom":"VERONI EVELINA","cuit":"27-20527324-2","iva":"Monotributista","email":"evelinaveroni@hotmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","SER.DOM.OBL.","TASA_FED_25DEM","PL.ERIOS","TASA_FED_BEL"]},{"id":"c136","nom":"VILLANUEVA, HUGO ROBERTO","cuit":"23-11810345-9","iva":"Responsable Inscripto","email":"hugorobertovillanueva@hotmail.com","wsp":"","imps":["IB.LOC.ERIOS","HON_PROF_RI","SER.DOM.OBL.","IVA","AUTON.","GAN.PER.FIS."]},{"id":"c137","nom":"WALINGRE NESTOR RENE","cuit":"20-16820261-0","iva":"Monotributista","email":"nere_2721@hotmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c138","nom":"WALINGRE, SOFIA","cuit":"27-36646273-8","iva":"Monotributista","email":"sofiawalingre@gmail.com","wsp":"","imps":[]},{"id":"c139","nom":"YAÑEZ CESAR","cuit":"20-33825929-9","iva":"Monotributista","email":"cesar.yanez.mmo@gmail.com","wsp":"","imps":[]},{"id":"c140","nom":"ZAMPEDRI GUILLERMO SEBASTIAN","cuit":"20-32505207-5","iva":"Monotributista","email":"zampedriguillermosebastian@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c141","nom":"ZANETTI, DANIEL ALBERTO","cuit":"20-20667515-3","iva":"Monotributista","email":"ernesto_zanetti@hotmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c142","nom":"ZANETTI, ERNESTO RAMON","cuit":"20-12337618-9","iva":"Monotributista","email":"ernesto_zanetti@hotmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c143","nom":"ZANETTI, VALERIA ALEJANDRA","cuit":"27-35716072-9","iva":"Monotributista","email":"valeria.zanetti22@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c144","nom":"ZAUPA CLARISA BEATRIZ","cuit":"27-23210386-3","iva":"Monotributista","email":"gisu_marzo@hotmail.com","wsp":"","imps":[]},{"id":"c145","nom":"ZILONI SERGIO RUBEN","cuit":"20-27337518-0","iva":"Monotributista","email":"sergio_ziloni@hotmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c146","nom":"HERZ SANDRO MANUEL","cuit":"20-31122738-7","iva":"Monotributista","email":"raquelcampedo@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c147","nom":"GONZALEZ ROXANA LAURA","cuit":"27-22841605-9","iva":"Monotributista","email":"roxi.1272@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c148","nom":"CALVO AGUSTIN","cuit":"20-43633540-8","iva":"Responsable Inscripto","email":"","wsp":"","imps":["IB.LOC.ERIOS","HON_PROF_LABORAL","HON_PROF_RI","LEYSOC_GAS_2","LEYSOC_GAS_1","AUTON.","IVA","GAN.PER.FIS.","TASA CHAJARI","LEYSOC_GAS_3","931_LSD"]},{"id":"c149","nom":"FERNANDEZ MARIA JOSE","cuit":"23-37586525-4","iva":"Monotributista","email":"","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c150","nom":"LIMA ROCIO SOLEDAD","cuit":"27-35464915-8","iva":"Monotributista","email":"limarocio@hotmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c151","nom":"SOSA AGUSTIN FRANCISCO","cuit":"20-37975350-8","iva":"Monotributista","email":"agustinsosa323@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c152","nom":"BLOCK GABRIEL ALEXIS","cuit":"20-34679152-8","iva":"Monotributista","email":"iturbef1@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c153","nom":"OJEDA HERNAN GABRIEL","cuit":"20-39195734-8","iva":"Monotributista","email":"larafavit14@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c154","nom":"BENITEZ JESICA VANESA","cuit":"27-33216328-6","iva":"Monotributista","email":"jesi59@outlook.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c155","nom":"WAISPROT AXEL LAUTARIO","cuit":"20-41630568-5","iva":"Monotributista","email":"","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c156","nom":"GONZALEZ MARTA RAQUEL","cuit":"27-21621027-7","iva":"Monotributista","email":"","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c157","nom":"GODOY JOSE MARIA","cuit":"23-26203800-9","iva":"Monotributista","email":"godoyjosemaria234@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c158","nom":"DALMASO NICOLAS ALEJANDRO","cuit":"20-37975674-4","iva":"Monotributista","email":"","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c159","nom":"DIMIER PATRICIA MARINA","cuit":"27-24732634-6","iva":"Monotributista","email":"GESTIONEMPRENDEDORABO@GMAIL.COM","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c160","nom":"AGRUPACION AUTOS DE EPOCA CHAJARI","cuit":"30-71859604-8","iva":"Exento","email":"","wsp":"","imps":["INF.FISC"]},{"id":"c161","nom":"CENTRO SUBOFICIALES SARGENTO CABRAL","cuit":"30-71551571-3","iva":"Exento","email":"","wsp":"","imps":["INF.FISC"]},{"id":"c162","nom":"BURNA ANA MELINA","cuit":"27-41119441-3","iva":"Monotributista","email":"","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c163","nom":"LOPEZ XIMENA ESMERALDA","cuit":"27-41610487-0","iva":"Monotributista","email":"","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c164","nom":"SOTO WALTER DIEGO","cuit":"20-22496088-4","iva":"Monotributista","email":"","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c165","nom":"CALVO LUIS MARIA","cuit":"20-05812395-2","iva":"Consumidor Final","email":"","wsp":"","imps":["HON_PROF_LAB_CP","SER.DOM.OBL."]},{"id":"c166","nom":"LEZCANO LIDIA ELIZABET","cuit":"23-30993078-9","iva":"Monotributista","email":"","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c167","nom":"BENITEZ EMANUEL MATIAS","cuit":"20-39840878-1","iva":"Monotributista","email":"","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c168","nom":"AMARILLO GUSTAVO ALEJANDRO","cuit":"20-22496353-0","iva":"Monotributista","email":"","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c169","nom":"AURI MARIA GABRIELA","cuit":"27-28384919-3","iva":"Monotributista","email":"","wsp":"","imps":["PL.ERIOS","HON_PROF_MONO","MONOT."]},{"id":"c170","nom":"GABRIELLI MARIA VERONICA","cuit":"27-22848025-3","iva":"Monotributista","email":"","wsp":"","imps":["HON_PROF_MONO","MONOT."]}];
+
+let clis=[],imps=[],recs=[],rcnt=1,editId=null,editImpId=null;
+
+function load(){
+  try{const r=localStorage.getItem('bo_c');if(r)clis=JSON.parse(r);}catch(e){clis=[];}
+  try{const r=localStorage.getItem('bo_i');if(r)imps=JSON.parse(r);}catch(e){imps=[];}
+  try{const r=localStorage.getItem('bo_r');if(r){const d=JSON.parse(r);recs=d.r;rcnt=d.c;}}catch(e){recs=[];rcnt=1;}
+  if(imps.length===0){imps=DEF_IMPS.map(x=>({...x}));sI();}
+  if(clis.length===0){clis=DEF_CLIS.map(x=>({...x}));sC();}
+  // Set current month in agenda selector
+  document.getElementById('smes').value=new Date().getMonth();
+  rAll();
+}
+function sC(){localStorage.setItem('bo_c',JSON.stringify(clis));}
+function sI(){localStorage.setItem('bo_i',JSON.stringify(imps));}
+function sR(){localStorage.setItem('bo_r',JSON.stringify({r:recs,c:rcnt}));}
+function rAll(){rDash();rCli();rImps();rAg();rCob();}
+
+function rDash(){
+  const mes=new Date().getMonth(),hoy=new Date().getDate();
+  let vtos=[];
+  clis.forEach(c=>{(c.imps||[]).forEach(id=>{const imp=imps.find(x=>x.id===id);if(!imp)return;const d=getVto(imp,mes,c.cuit);if(d)vtos.push({c:c.nom,imp:imp.abrev,dia:d});});});
+  vtos.sort((a,b)=>a.dia-b.dia);
+  const venc=vtos.filter(v=>v.dia<hoy).length,sinA=clis.filter(c=>!(c.imps||[]).length).length;
+  document.getElementById('met').innerHTML=`
+    <div class="metric"><div class="ml">Clientes activos</div><div class="mv">${clis.length}</div></div>
+    <div class="metric"><div class="ml">Vencimientos este mes</div><div class="mv a">${vtos.length}</div></div>
+    <div class="metric"><div class="ml">Ya vencidos</div><div class="mv ${venc>0?'r':'g'}">${venc}</div></div>
+    <div class="metric"><div class="ml">Recibos emitidos</div><div class="mv g">${recs.length}</div></div>
+  `;
+  document.getElementById('sinasig-n').innerHTML=sinA>0?`<div class="notice"><i class="ti ti-alert-triangle"></i> <b>${sinA} cliente(s)</b> sin obligaciones asignadas. <a href="#" onclick="nav('cli');document.getElementById('fil-iva').value='sinasig';rCli();return false">Ver listado →</a></div>`:'';
+  const prox=vtos.filter(v=>v.dia>=hoy).slice(0,8);
+  document.getElementById('pvtos').innerHTML=prox.length?prox.map(v=>{const u=(v.dia-hoy)<=3;return`<div class="vr${u?' urg':''}"><div class="vf">${v.dia}</div><div class="vi"><div class="vn">${v.c}</div><div class="vs">${v.imp}</div></div>${u?'<span class="badge br">Urgente</span>':''}</div>`;}).join(''):'<div class="es">Sin vencimientos próximos</div>';
+  document.getElementById('urec').innerHTML=recs.length?[...recs].reverse().slice(0,5).map(r=>`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:0.5px solid var(--bdr);font-size:13px"><div><div style="font-weight:500">${r.cn}</div><div style="font-size:11px;color:var(--txt2)">${r.im} · ${r.pe}</div></div><div style="color:var(--green);font-weight:600">$${Number(r.mo).toLocaleString('es-AR')}</div></div>`).join(''):'<div class="es">Sin recibos aún</div>';
+}
+
+function rCli(){
+  const q=(document.getElementById('busq')?.value||'').toLowerCase(),fi=document.getElementById('fil-iva')?.value||'';
+  let fil=clis.filter(c=>c.nom.toLowerCase().includes(q)||c.cuit.includes(q));
+  if(fi==='sinasig')fil=fil.filter(c=>!(c.imps||[]).length);
+  else if(fi)fil=fil.filter(c=>c.iva===fi);
+  document.getElementById('cli-cnt').textContent=`${fil.length} de ${clis.length} clientes`;
+  const fc={'Responsable Inscripto':'bp','Monotributista':'bg','Consumidor Final':'bgr','Exento':'ba'};
+  document.getElementById('tcli').innerHTML=fil.map(c=>{
+    const obs=(c.imps||[]).slice(0,4).map(id=>{const i=imps.find(x=>x.id===id);return i?`<span class="badge bb">${i.abrev}</span>`:''}).join('');
+    const mas=(c.imps||[]).length>4?`<span class="badge bgr">+${(c.imps||[]).length-4}</span>`:'';
+    const warn=!(c.imps||[]).length?'<span class="badge ba">Sin obligaciones</span>':'';
+    return`<tr><td style="font-weight:500">${c.nom}</td><td style="font-family:monospace;font-size:12px">${c.cuit}</td><td><span class="badge ${fc[c.iva]||'bgr'}">${c.iva}</span></td><td style="font-size:12px">${c.email||'—'}</td><td>${warn}${obs}${mas}</td><td style="white-space:nowrap"><button class="btn bsm" onclick="openMC('${c.id}')"><i class="ti ti-edit"></i></button> <button class="btn bsm" onclick="delC('${c.id}')" style="color:var(--red)"><i class="ti ti-trash"></i></button></td></tr>`;
+  }).join('');
+}
+
+function rImps(){
+  const fc2={'ARCA':'bb','Municipal':'ba','Provincial':'bg','Estudio':'bp','Otro':'bgr'};
+  document.getElementById('timp').innerHTML=imps.map(i=>`<tr>
+    <td style="font-family:monospace;font-weight:600;font-size:12px">${i.abrev}</td>
+    <td>${i.desc}</td>
+    <td><span class="badge ${i.tipo==='arca'?'bb':i.tipo==='fijo'?'bg':'bgr'}">${i.tipo==='arca'?'ARCA (por CUIT)':i.tipo==='fijo'?`Día ${i.dia||'?'}`:'Manual'}</span></td>
+    <td><span class="badge ${fc2[i.fuente]||'bgr'}">${i.fuente}</span></td>
+    <td><button class="btn bsm" onclick="openMI('${i.id}')"><i class="ti ti-edit"></i></button> <button class="btn bsm" onclick="delI('${i.id}')" style="color:var(--red)"><i class="ti ti-trash"></i></button></td>
+  </tr>`).join('');
+  const s=document.getElementById('as-i');
+  if(s)s.innerHTML='<option value="">-- Seleccionar --</option>'+imps.map(i=>`<option value="${i.id}">${i.abrev} — ${i.desc}</option>`).join('');
+  const af=document.getElementById('ag-fi');
+  if(af)af.innerHTML='<option value="">Todas las obligaciones</option>'+imps.map(i=>`<option value="${i.id}">${i.abrev}</option>`).join('');
+  renderAsig();
+}
+
+function renderAsig(){
+  const fi=document.getElementById('as-f')?.value||'';
+  let lista=fi==='sinasig'?clis.filter(c=>!(c.imps||[]).length):fi?clis.filter(c=>c.iva===fi):clis;
+  document.getElementById('asig-l').innerHTML='<div class="asig-grid">'+lista.map(c=>`<label class="asig-item"><input type="checkbox" class="ac" data-id="${c.id}" style="width:auto;cursor:pointer"> ${c.nom}</label>`).join('')+'</div>';
+}
+function selAll(v){document.querySelectorAll('.ac').forEach(cb=>cb.checked=v);}
+function applyAsig(){
+  const iid=document.getElementById('as-i').value;if(!iid){alert('Seleccioná una obligación');return;}
+  const sel=[...document.querySelectorAll('.ac:checked')].map(x=>x.dataset.id);if(!sel.length){alert('Seleccioná al menos un cliente');return;}
+  sel.forEach(id=>{const c=clis.find(x=>x.id===id);if(c&&!(c.imps||[]).includes(iid)){if(!c.imps)c.imps=[];c.imps.push(iid);}});
+  sC();rAll();alert(`Obligación asignada a ${sel.length} cliente(s) ✓`);
+}
+
+function rAg(){
+  const mes=parseInt(document.getElementById('smes')?.value||new Date().getMonth());
+  const q=(document.getElementById('ag-q')?.value||'').toLowerCase();
+  const fi=document.getElementById('ag-fi')?.value||'';
+  const hoy=new Date(),mh=hoy.getMonth(),dh=hoy.getDate();
+  const agr={};
+  clis.filter(c=>!q||c.nom.toLowerCase().includes(q)).forEach(c=>{
+    (c.imps||[]).forEach(id=>{
+      if(fi&&fi!==id)return;
+      const imp=imps.find(x=>x.id===id);if(!imp)return;
+      const d=getVto(imp,mes,c.cuit);if(!d)return;
+      if(!agr[d])agr[d]=[];
+      agr[d].push({c:c.nom,imp:imp.abrev,cuit:c.cuit,wsp:c.wsp});
+    });
+  });
+  const dias=Object.keys(agr).map(Number).sort((a,b)=>a-b);
+  let tot=0;dias.forEach(d=>tot+=agr[d].length);
+  document.getElementById('ag-tot').textContent=`${tot} vencimientos · ${MESES[mes]}`;
+  const ac=document.getElementById('ag-cont');
+  if(!dias.length){ac.innerHTML='<div class="card"><div class="es">Sin vencimientos para este mes.</div></div>';return;}
+  ac.innerHTML=dias.map(dia=>{
+    const pas=mes<mh||(mes===mh&&dia<dh),urg=mes===mh&&dia>=dh&&(dia-dh)<=3;
+    return`<div class="card" style="margin-bottom:8px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <div style="font-size:24px;font-weight:700;color:${pas?'var(--txt3)':urg?'var(--red)':'var(--green)'};min-width:34px">${dia}</div>
+        <div style="font-size:14px;font-weight:500">${MESES[mes]}</div>
+        ${pas?'<span class="badge bgr">Pasado</span>':urg?'<span class="badge br">Urgente</span>':'<span class="badge bg">Pendiente</span>'}
+        <span style="font-size:12px;color:var(--txt2);margin-left:auto">${agr[dia].length} vencimiento(s)</span>
+      </div>
+      ${agr[dia].map(it=>`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-top:0.5px solid var(--bdr);font-size:13px">
+        <span style="flex:1;font-weight:500">${it.c}</span>
+        <span class="badge bb">${it.imp}</span>
+        ${it.wsp?`<a href="https://wa.me/54${it.wsp.replace(/\D/g,'')}" target="_blank" style="color:var(--green);text-decoration:none"><i class="ti ti-brand-whatsapp"></i></a>`:''}
+        <span style="font-size:11px;color:var(--txt2)">${it.cuit}</span>
+      </div>`).join('')}
+    </div>`;
+  }).join('');
+}
+
+function genRec(){
+  const mes=parseInt(document.getElementById('smes')?.value||new Date().getMonth());
+  const agr={};
+  clis.forEach(c=>{(c.imps||[]).forEach(id=>{const imp=imps.find(x=>x.id===id);if(!imp)return;const d=getVto(imp,mes,c.cuit);if(!d)return;if(!agr[c.id])agr[c.id]={c,items:[]};agr[c.id].items.push({imp:imp.abrev,dia:d});});});
+  const ents=Object.values(agr);
+  document.getElementById('recs-c').innerHTML=ents.length?ents.map(e=>{
+    const txt=`Hola ${e.c.nom.split(',')[0].split(' ')[0]}, te recordamos los vencimientos de ${MESES[mes]}:\n`+
+      e.items.sort((a,b)=>a.dia-b.dia).map(i=>`• ${i.imp}: vence el ${i.dia} de ${MESES[mes]}`).join('\n')+
+      `\n\nCualquier consulta estamos a disposición.\nBO Estudio Contable`;
+    const tel=e.c.wsp?e.c.wsp.replace(/\D/g,''):'';
+    const waLink=tel?`<a href="https://wa.me/54${tel}?text=${encodeURIComponent(txt)}" target="_blank" class="btn btnp bsm" style="text-decoration:none"><i class="ti ti-brand-whatsapp"></i> Enviar WA</a>`:'';
+    return`<div style="margin-bottom:16px;padding-bottom:14px;border-bottom:0.5px solid var(--bdr)">
+      <div style="font-size:13px;font-weight:500;margin-bottom:6px">${e.c.nom} ${e.c.email?`<span class="badge bg" style="font-weight:400">${e.c.email}</span>`:''}</div>
+      <div class="rb">${txt}</div>
+      <div style="display:flex;gap:6px">${waLink}<button class="btn bsm" onclick="cop(this,\`${txt.replace(/\\/g,'\\\\').replace(/`/g,"'")}\`)"><i class="ti ti-copy"></i> Copiar</button></div>
+    </div>`;
+  }).join(''):'<div class="es">Sin vencimientos este mes</div>';
+  document.getElementById('recs-t').textContent=`Recordatorios — ${MESES[mes]} (${ents.length} clientes)`;
+  om('mo-recs');
+}
+function cop(btn,txt){navigator.clipboard.writeText(txt).then(()=>{btn.innerHTML='<i class="ti ti-check"></i> Copiado';setTimeout(()=>btn.innerHTML='<i class="ti ti-copy"></i> Copiar',2000);}).catch(()=>{prompt('Copiá el texto:',txt);});}
+
+function rCob(){
+  const q=(document.getElementById('cob-q')?.value||'').toLowerCase();
+  const fil=q?[...recs].filter(r=>r.cn.toLowerCase().includes(q)||r.im.toLowerCase().includes(q)):[...recs];
+  document.getElementById('lrec').innerHTML=fil.length?fil.reverse().map(r=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:0.5px solid var(--bdr);cursor:pointer;font-size:13px" onclick="vRec('${r.id}')"><div><div style="font-weight:500">${r.cn}</div><div style="font-size:11px;color:var(--txt2)">#${String(r.id).padStart(4,'0')} · ${r.im} · ${r.pe}</div></div><div style="color:var(--green);font-weight:600">$${Number(r.mo).toLocaleString('es-AR')}</div></div>`).join(''):'<div class="es">Sin recibos emitidos</div>';
+}
+function vRec(id){
+  const r=recs.find(x=>x.id==id);if(!r)return;
+  document.getElementById('rprev').innerHTML=`<div class="rp"><div class="rh"><div style="font-size:11px;color:var(--txt2)">Recibo N° ${String(r.id).padStart(4,'0')}</div><div style="font-size:16px;font-weight:600;color:var(--green)">BO Estudio Contable</div><div style="font-size:12px;color:var(--txt2);margin-top:4px">${r.fe}</div></div>
+    <div class="rrow"><span style="color:var(--txt2)">Cliente</span><span style="font-weight:500">${r.cn}</span></div>
+    <div class="rrow"><span style="color:var(--txt2)">CUIT</span><span>${r.cc}</span></div>
+    <div class="rrow"><span style="color:var(--txt2)">Concepto</span><span>${r.im}</span></div>
+    <div class="rrow"><span style="color:var(--txt2)">Período</span><span>${r.pe}</span></div>
+    ${r.ob?`<div class="rrow"><span style="color:var(--txt2)">Obs.</span><span>${r.ob}</span></div>`:''}
+    <div class="rtot"><span>Total abonado</span><span style="color:var(--green)">$${Number(r.mo).toLocaleString('es-AR')}</span></div>
+    <div style="margin-top:14px;text-align:center"><button class="btn btnp bsm" onclick="pRec('${r.id}')"><i class="ti ti-printer"></i> Imprimir / PDF</button></div>
+  </div>`;
+}
+function pRec(id){
+  const r=recs.find(x=>x.id==id);if(!r)return;
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head><title>Recibo ${String(r.id).padStart(4,'0')}</title>
+  <style>body{font-family:Arial,sans-serif;max-width:400px;margin:40px auto;font-size:13px;color:#222}
+  h2{font-size:18px;color:#1D9E75;margin:0}p{margin:2px 0;font-size:11px;color:#666}
+  table{width:100%;border-collapse:collapse;margin-top:14px}td{padding:7px 0;border-bottom:1px solid #eee}
+  .tot{font-weight:700;font-size:15px;border-top:2px solid #333;padding-top:10px;border-bottom:none}
+  footer{margin-top:24px;font-size:10px;color:#999;text-align:center;border-top:1px solid #eee;padding-top:10px}</style>
+  </head><body>
+  <h2>BO Estudio Contable</h2><p>Recibo N° ${String(r.id).padStart(4,'0')} — ${r.fe}</p>
+  <table>
+    <tr><td style="color:#666;width:40%">Cliente</td><td><b>${r.cn}</b></td></tr>
+    <tr><td style="color:#666">CUIT</td><td>${r.cc}</td></tr>
+    <tr><td style="color:#666">Concepto</td><td>${r.im}</td></tr>
+    <tr><td style="color:#666">Período</td><td>${r.pe}</td></tr>
+    ${r.ob?`<tr><td style="color:#666">Obs.</td><td>${r.ob}</td></tr>`:''}
+    <tr class="tot"><td>Total abonado</td><td style="color:#1D9E75">$${Number(r.mo).toLocaleString('es-AR')}</td></tr>
+  </table>
+  <footer>Documento generado por BO Estudio Contable</footer>
+  <script>window.print();<\/script></body></html>`);w.document.close();
+}
+
+// Modal cliente
+function openMC(id=null){
+  editId=id;
+  document.getElementById('mc-t').textContent=id?'Editar cliente':'Nuevo cliente';
+  const c=id?clis.find(x=>x.id===id):null;
+  document.getElementById('c-n').value=c?.nom||'';
+  document.getElementById('c-c').value=c?.cuit||'';
+  document.getElementById('c-e').value=c?.email||'';
+  document.getElementById('c-w').value=c?.wsp||'';
+  document.getElementById('c-i').value=c?.iva||'Monotributista';
+  document.getElementById('ci-chk').innerHTML=imps.map(i=>{
+    const s=c?.imps?.includes(i.id);
+    return`<label class="ic${s?' sel':''}" id="il-${i.id.replace(/[^a-z0-9]/gi,'_')}"><input type="checkbox" value="${i.id}" ${s?'checked':''} onchange="tg(this,'il-${i.id.replace(/[^a-z0-9]/gi,'_')}')"> ${i.abrev}</label>`;
+  }).join('');
+  om('mo-cli');
+}
+function tg(cb,lid){document.getElementById(lid)?.classList.toggle('sel',cb.checked);}
+function delC(id){if(!confirm('¿Eliminar este cliente?'))return;clis=clis.filter(x=>x.id!==id);sC();rAll();}
+function saveCli(){
+  const nom=document.getElementById('c-n').value.trim(),cuit=document.getElementById('c-c').value.trim();
+  if(!nom||!cuit){alert('Nombre y CUIT son obligatorios');return;}
+  const ci=[...document.querySelectorAll('#ci-chk input:checked')].map(x=>x.value);
+  const obj={nom,cuit,iva:document.getElementById('c-i').value,email:document.getElementById('c-e').value.trim(),wsp:document.getElementById('c-w').value.trim(),imps:ci};
+  if(editId){const idx=clis.findIndex(x=>x.id===editId);clis[idx]={...clis[idx],...obj};}
+  else{clis.push({id:'c'+Date.now(),...obj});}
+  sC();cm('mo-cli');rAll();
+}
+
+// Modal obligacion
+function openMI(id=null){
+  editImpId=id;
+  document.getElementById('mi-t').textContent=id?'Editar obligación':'Nueva obligación';
+  const i=id?imps.find(x=>x.id===id):null;
+  document.getElementById('i-a').value=i?.abrev||'';
+  document.getElementById('i-d').value=i?.desc||'';
+  document.getElementById('i-t').value=i?.tipo||'fijo';
+  document.getElementById('i-dia').value=i?.dia||'';
+  document.getElementById('i-ak').value=i?.arcaKey||'mono';
+  document.getElementById('i-f').value=i?.fuente||'ARCA';
+  togDia();om('mo-imp');
+}
+function togDia(){
+  const v=document.getElementById('i-t')?.value;
+  document.getElementById('i-dia-w').style.display=v==='fijo'?'flex':'none';
+  document.getElementById('i-arca-w').style.display=v==='arca'?'flex':'none';
+}
+function delI(id){
+  if(!confirm('¿Eliminar esta obligación? Se quitará de todos los clientes.'))return;
+  imps=imps.filter(x=>x.id!==id);
+  clis.forEach(c=>{c.imps=(c.imps||[]).filter(x=>x!==id);});
+  sI();sC();rAll();
+}
+function saveImp(){
+  const a=document.getElementById('i-a').value.trim(),d=document.getElementById('i-d').value.trim();
+  if(!a||!d){alert('Código y descripción son obligatorios');return;}
+  const t=document.getElementById('i-t').value;
+  const obj={abrev:a,desc:d,tipo:t,dia:t==='fijo'?parseInt(document.getElementById('i-dia').value)||null:null,arcaKey:t==='arca'?document.getElementById('i-ak').value:null,fuente:document.getElementById('i-f').value};
+  if(editImpId){const idx=imps.findIndex(x=>x.id===editImpId);imps[idx]={...imps[idx],...obj};}
+  else{imps.push({id:a,...obj});}
+  sI();cm('mo-imp');rImps();
+}
+
+// Modal recibo
+function openMR(){
+  document.getElementById('r-c').innerHTML='<option value="">-- Seleccionar cliente --</option>'+[...clis].sort((a,b)=>a.nom.localeCompare(b.nom)).map(c=>`<option value="${c.id}">${c.nom}</option>`).join('');
+  document.getElementById('r-i').innerHTML='<option value="">-- Seleccionar --</option>';
+  const now=new Date();
+  document.getElementById('r-p').value=`${String(now.getMonth()+1).padStart(2,'0')}/${now.getFullYear()}`;
+  document.getElementById('r-m').value='';
+  document.getElementById('r-o').value='';
+  om('mo-rec');
+}
+function loadRI(){
+  const id=document.getElementById('r-c').value,c=clis.find(x=>x.id===id);
+  const s=document.getElementById('r-i');
+  if(!c){s.innerHTML='<option value="">-- Seleccionar --</option>';return;}
+  s.innerHTML='<option value="">-- Seleccionar --</option>'+(c.imps||[]).map(id=>{const i=imps.find(x=>x.id===id);return i?`<option value="${i.abrev}">${i.abrev} — ${i.desc}</option>`:''}).join('');
+}
+function saveRec(){
+  const cid=document.getElementById('r-c').value,im=document.getElementById('r-i').value,mo=document.getElementById('r-m').value;
+  if(!cid||!im||!mo){alert('Completá cliente, obligación e importe');return;}
+  const c=clis.find(x=>x.id===cid);
+  const rec={id:rcnt++,cn:c.nom,cc:c.cuit,im,pe:document.getElementById('r-p').value,mo:parseFloat(mo),ob:document.getElementById('r-o').value,fe:new Date().toLocaleDateString('es-AR')};
+  recs.push(rec);sR();cm('mo-rec');rAll();nav('cob');setTimeout(()=>vRec(rec.id),100);
+}
+
+function nav(id,btn){
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
+  document.getElementById('sec-'+id)?.classList.add('active');
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  else document.querySelectorAll('.nb').forEach(b=>{if(b.getAttribute('onclick')?.includes("'"+id+"'"))b.classList.add('active');});
+}
+function showTab(id,btn){
+  document.querySelectorAll('.tp').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tp-'+id)?.classList.add('active');
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  btn?.classList.add('active');
+}
+function om(id){document.getElementById(id)?.classList.add('open');}
+function cm(id){document.getElementById(id)?.classList.remove('open');}
+
+load();
+</script>
+</body>
+</html>
