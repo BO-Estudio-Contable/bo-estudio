@@ -126,7 +126,6 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--green)}
     <button class="nb" onclick="nav('imp',this)"><i class="ti ti-file-invoice"></i> Obligaciones</button>
     <button class="nb" onclick="nav('ag',this)"><i class="ti ti-calendar"></i> Agenda</button>
     <button class="nb" onclick="nav('cob',this)"><i class="ti ti-receipt"></i> Cobranzas</button>
-    <button class="nb" onclick="nav('vto',this)"><i class="ti ti-table"></i> Vencimientos</button>
     <button class="nb" onclick="nav('caja',this)"><i class="ti ti-wallet"></i> Caja</button>
     <button class="nb" onclick="nav('pagos',this)"><i class="ti ti-cash"></i> Pagos</button>
     <button class="nb" onclick="nav('bkp',this)"><i class="ti ti-database-export"></i> Respaldo</button>
@@ -155,6 +154,11 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--green)}
       <option value="Responsable Inscripto">Resp. Inscriptos</option>
       <option value="sinasig">Sin obligaciones</option>
     </select>
+    <select id="fil-activo" onchange="rCli()" style="max-width:150px">
+      <option value="">Activos e inactivos</option>
+      <option value="activo">Solo activos</option>
+      <option value="inactivo">Solo inactivos</option>
+    </select>
     <select id="fil-orden" onchange="rCli()" style="max-width:150px">
       <option value="az">Nombre A → Z</option>
       <option value="za">Nombre Z → A</option>
@@ -162,7 +166,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--green)}
     <span id="cli-cnt" style="font-size:12px;color:var(--txt2)"></span>
   </div>
   <div class="card"><div class="tw"><table>
-    <thead><tr><th>Nombre / Razón social</th><th>CUIT</th><th>Condición</th><th>Email</th><th>Saludo</th><th>Obligaciones</th><th></th></tr></thead>
+    <thead><tr><th>Nombre / Razón social</th><th>CUIT</th><th>Condición</th><th>Email</th><th>Saludo</th><th>Cierre</th><th>Estado</th><th>Obligaciones</th><th></th></tr></thead>
     <tbody id="tcli"></tbody>
   </table></div></div>
 </div>
@@ -182,9 +186,18 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--green)}
       </select>
     </div>
     <div class="card"><div class="tw"><table>
-      <thead><tr><th>Código</th><th>Descripción</th><th>Vencimiento</th><th>Organismo</th><th></th></tr></thead>
+      <thead><tr><th>Código</th><th>Descripción</th><th>Vencimiento</th><th>Frecuencia</th><th>Período</th><th>Naturaleza</th><th></th></tr></thead>
       <tbody id="timp"></tbody>
     </table></div></div>
+    <!-- Editor de vencimientos inline -->
+    <div id="vto-inline" style="display:none;margin-top:16px">
+      <select id="vto-imp" style="display:none"></select>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <span style="font-size:13px;font-weight:600;color:var(--txt2)"><i class="ti ti-calendar-event"></i> Vencimientos de: <span id="vto-inline-titulo" style="color:var(--txt)"></span></span>
+        <button class="btn bsm" onclick="cerrarEditorVto()"><i class="ti ti-x"></i> Cerrar</button>
+      </div>
+      <div id="vto-cont"></div>
+    </div>
   </div>
   <div id="tp-masiv" class="tp">
     <div class="card">
@@ -416,35 +429,6 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--green)}
 </div>
 
 <!-- VENCIMIENTOS -->
-<div id="sec-vto" class="sec">
-  <div class="card" style="margin-bottom:12px">
-    <div class="ch" style="margin-bottom:10px">
-      <span class="ct"><i class="ti ti-table"></i> Editar vencimientos por obligación</span>
-    </div>
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-      <div style="display:flex;flex-direction:column;gap:4px">
-        <label style="font-size:11px;color:var(--txt2);font-weight:500">Buscar</label>
-        <input type="text" id="vto-busq" placeholder="Escribí para filtrar..." oninput="filtrarVtoOpts()" style="width:200px">
-      </div>
-      <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:240px">
-        <label style="font-size:11px;color:var(--txt2);font-weight:500">Obligación</label>
-        <select id="vto-imp" onchange="rVto()" style="width:100%">
-          <option value="">-- Seleccionar obligación --</option>
-        </select>
-      </div>
-    </div>
-    <div style="font-size:11px;color:var(--txt2);margin-top:8px">
-      <i class="ti ti-info-circle"></i> Filtrá por nombre, seleccioná la obligación, editá los días y guardá.
-    </div>
-  </div>
-  <div id="vto-cont">
-    <div style="text-align:center;padding:24px;color:var(--txt2)">
-      <i class="ti ti-table" style="font-size:32px;display:block;margin-bottom:8px;color:var(--txt3)"></i>
-      <div style="font-size:13px">Seleccioná una obligación para editar sus vencimientos</div>
-    </div>
-  </div>
-</div>
-
 <!-- MODALES -->
 <div class="overlay" id="mo-cli">
 <div class="modal">
@@ -458,6 +442,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--green)}
     <div class="fg fgf"><label>Email</label><input id="c-e" type="email" placeholder="cliente@mail.com"></div>
     <div class="fg fgf"><label>WhatsApp (sin 0 ni 15)</label><input id="c-w" type="text" placeholder="Ej: 3456123456"></div>
     <div class="fg fgf"><label>Nombre para saludo <span style="font-weight:400;color:var(--txt2)">(aparece en el recordatorio de WhatsApp)</span></label><input id="c-sal" type="text" placeholder="Ej: Laura"></div>
+    <div class="fg fgf"><label>Mes de cierre de ejercicio <span style="font-weight:400;color:var(--txt2)">(1=Enero … 12=Diciembre)</span></label><input id="c-cierre" type="number" min="1" max="12" placeholder="12"></div>
     <div class="fg fgf"><label>Obligaciones asignadas</label><div class="igrid" id="ci-chk"></div></div>
   </div>
   <div class="ma"><button class="btn" onclick="cm('mo-cli')">Cancelar</button><button class="btn btnp" onclick="saveCli()">Guardar cliente</button></div>
@@ -471,13 +456,13 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--green)}
     <div class="fg"><label>Tipo de vencimiento</label>
       <select id="i-t" onchange="togDia()">
         <option value="fijo">Día fijo del mes</option>
-        <option value="arca">Calendario ARCA (por CUIT)</option>
+        <option value="arca">Variable por CUIT</option>
         <option value="manual">Manual / Sin fecha fija</option>
       </select>
     </div>
     <div class="fg fgf"><label>Descripción completa *</label><input id="i-d" type="text" placeholder="Ej: Tasa Higiene Comercial Chajarí"></div>
     <div class="fg" id="i-dia-w"><label>Día fijo del mes</label><input id="i-dia" type="number" min="1" max="31" placeholder="Ej: 20"></div>
-    <div class="fg" id="i-arca-w" style="display:none"><label>Clave ARCA</label>
+    <div class="fg" id="i-arca-w" style="display:none"><label>Clave calendario</label>
       <select id="i-ak">
         <option value="mono">Monotributo</option><option value="iva">IVA</option>
         <option value="autonomos">Autónomos</option><option value="empleadores">Empleadores/F.931</option>
@@ -485,8 +470,26 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--green)}
         <option value="conv_mult">Convenio Multilateral</option><option value="bienes_pers">Bienes Personales</option>
       </select>
     </div>
-    <div class="fg"><label>Organismo</label>
-      <select id="i-f"><option value="ARCA">ARCA / AFIP</option><option value="Municipal">Municipal</option><option value="Provincial">Provincial (ER)</option><option value="Estudio">Honorarios Estudio</option><option value="Otro">Otro</option></select>
+    <div class="fg"><label>Naturaleza</label>
+      <select id="i-nat">
+        <option value="det">Determinativo</option>
+        <option value="inf">Informativo (sin monto)</option>
+      </select>
+    </div>
+    <div class="fg"><label>Frecuencia</label>
+      <select id="i-frec" onchange="togDia()">
+        <option value="mensual">Mensual</option>
+        <option value="anual">Anual</option>
+      </select>
+    </div>
+    <div class="fg" id="i-periodo-w"><label>Período</label>
+      <select id="i-periodo">
+        <option value="vencido">Mes vencido</option>
+        <option value="corriente">Mes corriente</option>
+      </select>
+    </div>
+    <div class="fg" id="i-meses-w" style="display:none"><label>Meses tras cierre de ejercicio</label>
+      <input id="i-meses" type="number" min="1" max="24" placeholder="Ej: 5" style="max-width:100px">
     </div>
   </div>
   <div class="ma"><button class="btn" onclick="cm('mo-imp')">Cancelar</button><button class="btn btnp" onclick="saveImp()">Guardar obligación</button></div>
@@ -566,7 +569,7 @@ function getVto(imp,mes,cuit){
 }
 
 const DEF_IMPS=[
-  {id:'MONOT.',abrev:'MONOT.',desc:'Monotributo',tipo:'fijo',dia:20,fuente:'ARCA'},
+  {id:'MONOT.',abrev:'MONOT.',desc:'Monotributo',tipo:'fijo',dia:20,fuente:'ARCA',frec:'mensual',periodo:'corriente'},
   {id:'HON_PROF_MONO',abrev:'HON_PROF_MONO',desc:'Honorarios Prof. - Monotributo',tipo:'fijo',dia:15,fuente:'Estudio'},
   {id:'HON_PROF_RI',abrev:'HON_PROF_RI',desc:'Honorarios Prof. - Resp. Inscripto',tipo:'fijo',dia:15,fuente:'Estudio'},
   {id:'HON_PROF_LABORAL',abrev:'HON_PROF_LABORAL',desc:'Honorarios Prof. - Laboral',tipo:'fijo',dia:15,fuente:'Estudio'},
@@ -577,24 +580,24 @@ const DEF_IMPS=[
   {id:'GAN.PER.FIS.',abrev:'GAN.PER.FIS.',desc:'Ganancias Personas Físicas',tipo:'arca',arcaKey:'ganancias_ph',fuente:'ARCA'},
   {id:'GAN.SOC.',abrev:'GAN.SOC.',desc:'Ganancias Sociedades',tipo:'arca',arcaKey:'ganancias_soc',fuente:'ARCA'},
   {id:'CONV.MULT.',abrev:'CONV.MULT.',desc:'Convenio Multilateral',tipo:'arca',arcaKey:'conv_mult',fuente:'ARCA'},
-  {id:'CONV.MULT.DJ',abrev:'CONV.MULT.DJ',desc:'Convenio Multilateral (DDJJ Anual)',tipo:'manual',fuente:'ARCA'},
+  {id:'CONV.MULT.DJ',abrev:'CONV.MULT.DJ',desc:'Convenio Multilateral (DDJJ Anual)',tipo:'fijo',dia:30,fuente:'ARCA'},
   {id:'SER.DOM.OBL.',abrev:'SER.DOM.OBL.',desc:'Servicio Doméstico Obligatorio',tipo:'fijo',dia:10,fuente:'ARCA'},
   {id:'PL.ERIOS',abrev:'PL.ERIOS',desc:'Profesiones Liberales Entre Ríos',tipo:'fijo',dia:16,fuente:'Provincial'},
   {id:'IB.LOC.ERIOS',abrev:'IB.LOC.ERIOS',desc:'Ingresos Brutos Entre Ríos',tipo:'fijo',dia:18,fuente:'Provincial'},
   {id:'TASA CHAJARI',abrev:'TASA CHAJARI',desc:'Tasa Higiene Comercial Chajarí',tipo:'fijo',dia:20,fuente:'Municipal'},
   {id:'TASA CONCORDIA',abrev:'TASA CONCORDIA',desc:'Tasa Comercial Concordia',tipo:'fijo',dia:20,fuente:'Municipal'},
-  {id:'TASA_CHA_RIV',abrev:'TASA_CHA_RIV',desc:'Tasa Higiene Chajarí - Rivadavia',tipo:'fijo',dia:20,fuente:'Municipal'},
-  {id:'TASA_CHA_URQ',abrev:'TASA_CHA_URQ',desc:'Tasa Higiene Chajarí - Urquiza',tipo:'fijo',dia:20,fuente:'Municipal'},
-  {id:'TASA_CHA_MLIC',abrev:'TASA_CHA_MLIC',desc:'Tasa Higiene Chajarí - M. Lic.',tipo:'fijo',dia:20,fuente:'Municipal'},
-  {id:'TASA_CHA_PELU',abrev:'TASA_CHA_PELU',desc:'Tasa Higiene Chajarí - Peluquería',tipo:'fijo',dia:20,fuente:'Municipal'},
-  {id:'TASA_CHA_SAR',abrev:'TASA_CHA_SAR',desc:'Tasa Higiene Chajarí - Sarmiento',tipo:'fijo',dia:20,fuente:'Municipal'},
-  {id:'TASA_CHA_1DEM',abrev:'TASA_CHA_1DEM',desc:'Tasa Higiene Chajarí - 1 de Mayo',tipo:'fijo',dia:20,fuente:'Municipal'},
-  {id:'TASA_CHA_9DEJ',abrev:'TASA_CHA_9DEJ',desc:'Tasa Higiene Chajarí - 9 de Julio',tipo:'fijo',dia:20,fuente:'Municipal'},
-  {id:'TASA_CHA_SFE',abrev:'TASA_CHA_SFE',desc:'Tasa Higiene Chajarí - Sta. Fe',tipo:'fijo',dia:20,fuente:'Municipal'},
-  {id:'TASA_CHA_HELA',abrev:'TASA_CHA_HELA',desc:'Tasa Higiene Chajarí - H. Lagos',tipo:'fijo',dia:20,fuente:'Municipal'},
+  {id:'TASA_CHA_RIV',abrev:'TASA_CHA_RIV',desc:'Tasa Higiene Chajarí - Rivadavia',tipo:'fijo',dia:25,fuente:'Municipal'},
+  {id:'TASA_CHA_URQ',abrev:'TASA_CHA_URQ',desc:'Tasa Higiene Chajarí - Urquiza',tipo:'fijo',dia:25,fuente:'Municipal'},
+  {id:'TASA_CHA_MLIC',abrev:'TASA_CHA_MLIC',desc:'Tasa Higiene Chajarí - M. Lic.',tipo:'fijo',dia:25,fuente:'Municipal'},
+  {id:'TASA_CHA_PELU',abrev:'TASA_CHA_PELU',desc:'Tasa Higiene Chajarí - Peluquería',tipo:'fijo',dia:25,fuente:'Municipal'},
+  {id:'TASA_CHA_SAR',abrev:'TASA_CHA_SAR',desc:'Tasa Higiene Chajarí - Sarmiento',tipo:'fijo',dia:25,fuente:'Municipal'},
+  {id:'TASA_CHA_1DEM',abrev:'TASA_CHA_1DEM',desc:'Tasa Higiene Chajarí - 1 de Mayo',tipo:'fijo',dia:25,fuente:'Municipal'},
+  {id:'TASA_CHA_9DEJ',abrev:'TASA_CHA_9DEJ',desc:'Tasa Higiene Chajarí - 9 de Julio',tipo:'fijo',dia:25,fuente:'Municipal'},
+  {id:'TASA_CHA_SFE',abrev:'TASA_CHA_SFE',desc:'Tasa Higiene Chajarí - Sta. Fe',tipo:'fijo',dia:25,fuente:'Municipal'},
+  {id:'TASA_CHA_HELA',abrev:'TASA_CHA_HELA',desc:'Tasa Higiene Chajarí - H. Lagos',tipo:'fijo',dia:25,fuente:'Municipal'},
   {id:'TASA_FED_25DEM',abrev:'TASA_FED_25DEM',desc:'Tasa Federación - 25 de Mayo',tipo:'fijo',dia:20,fuente:'Municipal'},
   {id:'TASA_FED_BEL',abrev:'TASA_FED_BEL',desc:'Tasa Federación - Belgrano',tipo:'fijo',dia:20,fuente:'Municipal'},
-  {id:'INF.FISC',abrev:'INF.FISC',desc:'Presentación Única de Balances (PUB)',tipo:'manual',fuente:'ARCA'},
+  {id:'INF.FISC',abrev:'INF.FISC',desc:'Presentación Única de Balances (PUB)',tipo:'fijo',dia:30,fuente:'ARCA'},
   {id:'PYME_ACC.PART.SOC.',abrev:'PYME_ACC',desc:'PYME Acciones y Participaciones',tipo:'manual',fuente:'ARCA'},
   {id:'LEYSOC_FATSA 1',abrev:'LEYSOC_FATSA 1',desc:'Leyes Sociales - FATSA 1%',tipo:'fijo',dia:10,fuente:'Provincial'},
   {id:'LEYSOC_FATSA 2',abrev:'LEYSOC_FATSA 2',desc:'Leyes Sociales - FATSA 2%',tipo:'fijo',dia:10,fuente:'Provincial'},
@@ -623,6 +626,32 @@ function load(){
   try{const r=localStorage.getItem('bo_r');if(r){const d=JSON.parse(r);recs=d.r;rcnt=d.c;}}catch(e){recs=[];rcnt=1;}
   if(imps.length===0){imps=DEF_IMPS.map(x=>({...x}));sI();}
   if(clis.length===0){clis=DEF_CLIS.map(x=>({...x}));sC();}
+  // Migración: actualizar dias de TASA_CHA de 20 a 25
+  const TASA_CHA_IDS = ['TASA_CHA_RIV','TASA_CHA_URQ','TASA_CHA_MLIC','TASA_CHA_PELU','TASA_CHA_SAR','TASA_CHA_1DEM','TASA_CHA_9DEJ','TASA_CHA_SFE','TASA_CHA_HELA'];
+  let impsChanged = false;
+  imps.forEach(imp=>{
+    if(TASA_CHA_IDS.includes(imp.id) && imp.dia === 20){
+      imp.dia = 25;
+      impsChanged = true;
+    }
+    // Migración: agregar frec/periodo si no existen
+    if(!imp.frec){
+      imp.frec = 'mensual';
+      // MONOT. es mes corriente, el resto mes vencido
+      imp.periodo = imp.id === 'MONOT.' ? 'corriente' : 'vencido';
+      impsChanged = true;
+    }
+    // Migración: CONV.MULT.DJ e INF.FISC de manual a fijo dia 30
+    if((imp.id==='CONV.MULT.DJ'||imp.id==='INF.FISC') && imp.tipo==='manual'){
+      imp.tipo='fijo'; imp.dia=30; impsChanged=true;
+    }
+    // Migración: agregar nat si no existe (todas determinativas por defecto)
+    if(!imp.nat){
+      imp.nat = 'det';
+      impsChanged = true;
+    }
+  });
+  if(impsChanged){ sI(); }
   // Limpiar comas en nombres y agregar saludo si no existe
   const EMPRESAS_S=new Set(['SRL','SAS','SA','AC','CIVIL','SOCIEDAD','COOPERATIVA','ASOCIACION','FUNDACION','ESTUDIO','SUBOFICIALES','HERMANOS']);
   const SKIP_S=new Set(['A.','B.','C.','D.','E.','DEL','DE','LA','LAS','LOS','Y','(HIJO)','(HIJA)']);
@@ -640,6 +669,7 @@ function load(){
     if(limpio!==c.nom){c.nom=limpio;cliChanged=true;}
     if(!c.saludo){c.saludo=sugerirSaludo(c.nom);cliChanged=true;}
     if(!c.wsp){c.wsp='3454946921';cliChanged=true;} // número de prueba
+    if(!c.cierreMes){c.cierreMes=12;cliChanged=true;} // mes de cierre por defecto
   });
   if(cliChanged) sC();
   loadVto();
@@ -675,24 +705,28 @@ function rDash(){
 function rCli(){
   const q=(document.getElementById('busq')?.value||'').toLowerCase();
   const fi=document.getElementById('fil-iva')?.value||'';
+  const factl=document.getElementById('fil-activo')?.value||'';
   const orden=document.getElementById('fil-orden')?.value||'az';
   let fil=clis.filter(c=>c.nom.toLowerCase().includes(q)||c.cuit.includes(q));
   if(fi==='sinasig')fil=fil.filter(c=>!(c.imps||[]).length);
   else if(fi)fil=fil.filter(c=>c.iva===fi);
+  if(factl==='activo')fil=fil.filter(c=>c.activo!==false);
+  else if(factl==='inactivo')fil=fil.filter(c=>c.activo===false);
   // Ordenar
   fil.sort((a,b)=>{
     const na=a.nom.replace(/,/g,'').trim();
     const nb=b.nom.replace(/,/g,'').trim();
     return orden==='az' ? na.localeCompare(nb,'es') : nb.localeCompare(na,'es');
   });
-  document.getElementById('cli-cnt').textContent=`${fil.length} de ${clis.length} clientes`;
+  const inactivos=clis.filter(c=>c.activo===false).length;
+  document.getElementById('cli-cnt').textContent=`${fil.length} de ${clis.length} clientes${inactivos?` · ${inactivos} inactivo(s)`:''}`;
   const fc={'Responsable Inscripto':'bp','Monotributista':'bg','Consumidor Final':'bgr','Exento':'ba'};
   document.getElementById('tcli').innerHTML=fil.map(c=>{
     const nomDisplay = c.nom.replace(/,/g,'').replace(/\s+/g,' ').trim();
     const obs=(c.imps||[]).slice(0,4).map(id=>{const i=imps.find(x=>x.id===id);return i?`<span class="badge bb">${i.abrev}</span>`:''}).join('');
     const mas=(c.imps||[]).length>4?`<span class="badge bgr">+${(c.imps||[]).length-4}</span>`:'';
     const warn=!(c.imps||[]).length?'<span class="badge ba">Sin obligaciones</span>':'';
-    return`<tr><td style="font-weight:500">${nomDisplay}</td><td style="font-family:monospace;font-size:12px">${c.cuit}</td><td><span class="badge ${fc[c.iva]||'bgr'}">${c.iva}</span></td><td style="font-size:12px">${c.email||'—'}</td><td><input type="text" value="${c.saludo||''}" placeholder="Nombre saludo" style="width:90px;padding:3px 6px;font-size:12px" onchange="updateSaludo('${c.id}',this.value)" title="Nombre que aparece en el recordatorio de WhatsApp"></td><td>${warn}${obs}${mas}</td><td style="white-space:nowrap"><button class="btn bsm" onclick="openMC('${c.id}')"><i class="ti ti-edit"></i></button> <button class="btn bsm" onclick="delC('${c.id}')" style="color:var(--red)"><i class="ti ti-trash"></i></button></td></tr>`;
+    return`<tr style="${c.activo===false?'opacity:0.55;background:var(--bg2)':''}"><td style="font-weight:500">${nomDisplay}</td><td style="font-family:monospace;font-size:12px">${c.cuit}</td><td><span class="badge ${fc[c.iva]||'bgr'}">${c.iva}</span></td><td style="font-size:12px">${c.email||'—'}</td><td><input type="text" value="${c.saludo||''}" placeholder="Nombre saludo" style="width:90px;padding:3px 6px;font-size:12px" onchange="updateSaludo('${c.id}',this.value)" title="Nombre que aparece en el recordatorio de WhatsApp"></td><td><input type="number" min="1" max="12" value="${c.cierreMes||12}" style="width:52px;padding:3px 6px;font-size:12px;text-align:center" onchange="updateCierreMes('${c.id}',this.value)" title="Mes de cierre de ejercicio fiscal"></td><td><button class="btn bsm" onclick="toggleActivo('${c.id}')" title="${c.activo===false?'Reactivar cliente':'Desactivar cliente'}" style="min-width:80px;${c.activo===false?'color:var(--txt2)':'color:var(--green)'}"><i class="ti ti-${c.activo===false?'player-play':'check'}"></i> ${c.activo===false?'Inactivo':'Activo'}</button></td><td>${warn}${obs}${mas}</td><td style="white-space:nowrap"><button class="btn bsm" onclick="openMC('${c.id}')"><i class="ti ti-edit"></i></button> <button class="btn bsm" onclick="delC('${c.id}')" style="color:var(--red)"><i class="ti ti-trash"></i></button></td></tr>`;
   }).join('');
 }
 
@@ -705,9 +739,11 @@ function rImps(){
   document.getElementById('timp').innerHTML=sorted.map(i=>`<tr>
     <td style="font-family:monospace;font-weight:600;font-size:12px">${i.abrev}</td>
     <td>${i.desc}</td>
-    <td><span class="badge ${i.tipo==='arca'?'bb':i.tipo==='fijo'?'bg':'bgr'}">${i.tipo==='arca'?'ARCA (por CUIT)':i.tipo==='fijo'?`Día ${i.dia||'?'}`:'Manual'}</span></td>
-    <td><span class="badge ${fc2[i.fuente]||'bgr'}">${i.fuente}</span></td>
-    <td><button class="btn bsm" onclick="openMI('${i.id}')"><i class="ti ti-edit"></i></button> <button class="btn bsm" onclick="delI('${i.id}')" style="color:var(--red)"><i class="ti ti-trash"></i></button></td>
+    <td><span class="badge ${i.tipo==='arca'?'bb':i.tipo==='fijo'?'bg':'bgr'}">${i.tipo==='arca'?'Variable por CUIT':i.tipo==='fijo'?`Día ${i.dia||'?'}`:'Manual'}</span></td>
+    <td><span class="badge ${(i.frec||'mensual')==='anual'?'bp':'ba'}">${(i.frec||'mensual')==='anual'?`Anual`:'Mensual'}</span></td>
+    <td style="font-size:11px;color:var(--txt2)">${(i.frec||'mensual')==='anual'?`${i.mesesCierre||'?'} mes(es) tras cierre`:(i.periodo||'vencido')==='corriente'?'Mes corriente':'Mes vencido'}</td>
+    <td><span class="badge ${(i.nat||'det')==='inf'?'ba':'bg'}">${(i.nat||'det')==='inf'?'Informativo':'Determinativo'}</span></td>
+    <td style="white-space:nowrap"><button class="btn bsm" onclick="abrirEditorVto('${i.id}')" title="Editar vencimientos"><i class="ti ti-calendar-event"></i></button> <button class="btn bsm" onclick="openMI('${i.id}')"><i class="ti ti-edit"></i></button> <button class="btn bsm" onclick="delI('${i.id}')" style="color:var(--red)"><i class="ti ti-trash"></i></button></td>
   </tr>`).join('');
   const s=document.getElementById('as-i');
   if(s)s.innerHTML='<option value="">-- Seleccionar --</option>'+imps.map(i=>`<option value="${i.id}">${i.abrev} — ${i.desc}</option>`).join('');
@@ -833,7 +869,7 @@ function filtrarListaCli(){
   const q=(document.getElementById('ag-q-search')?.value||'').toLowerCase();
   const lista=document.getElementById('ag-cli-lista');
   if(!lista)return;
-  const sorted=[...clis].sort((a,b)=>a.nom.localeCompare(b.nom,'es'));
+  const sorted=[...clis].filter(c=>c.activo!==false).sort((a,b)=>a.nom.localeCompare(b.nom,'es'));
   const filtrados=q?sorted.filter(c=>c.nom.toLowerCase().includes(q)):sorted;
   lista.innerHTML=filtrados.map(c=>{
     const sel=agCliSeleccionados.has(c.id);
@@ -991,8 +1027,8 @@ function rAg(){
 
   // Filtro cliente: por IDs seleccionados o todos
   const clisFiltrados = agCliSeleccionados.size > 0
-    ? clis.filter(c=>agCliSeleccionados.has(c.id))
-    : clis;
+    ? clis.filter(c=>agCliSeleccionados.has(c.id) && c.activo!==false)
+    : clis.filter(c=>c.activo!==false);
 
   clisFiltrados.forEach(c=>{
     (c.imps||[]).forEach(id=>{
@@ -1008,7 +1044,12 @@ function rAg(){
       if(impFil==='sin'&&monto&&parseFloat(monto)>0)return;
       if(impFil==='con'&&(!monto||parseFloat(monto)<=0))return;
       if(!agr[d])agr[d]=[];
-      agr[d].push({cid:c.id, c:c.nom, impId:id, imp:imp.abrev, cuit:c.cuit, wsp:c.wsp, periodo});
+      // Si es informativa, marcar automáticamente como pagado
+      if(imp.nat === 'inf'){
+        const estadoActual = getEstado(c.id, id, mes, anio);
+        if(estadoActual === 'pendiente') setEstado(c.id, id, mes, anio, 'pagado');
+      }
+      agr[d].push({cid:c.id, c:c.nom, impId:id, imp:imp.abrev, cuit:c.cuit, wsp:c.wsp, periodo, nat:imp.nat||'det'});
     });
   });
   const dias=Object.keys(agr).map(Number).sort((a,b)=>a-b);
@@ -1045,15 +1086,18 @@ function rAg(){
           const uid = `${it.cid}_${it.impId}_${mes}_${anio}`;
           return`<tr>
             <td style="font-weight:500;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${it.c}">${it.c}</td>
-            <td><span class="badge bb" style="font-size:10px">${it.imp}</span></td>
+            <td><span class="badge bb" style="font-size:10px">${it.imp}</span>${it.nat==='inf'?` <span class="badge ba" style="font-size:9px">Info</span>`:''}</td>
             <td><span class="badge bgr" style="font-size:10px">${it.periodo}</span></td>
             <td>
-              <input type="number" min="0" step="0.01"
+              ${it.nat==='inf'
+                ? `<span style="font-size:11px;color:var(--txt2);font-style:italic">Sin monto</span>`
+                : `<input type="number" min="0" step="0.01"
                 value="${imp_val}"
                 placeholder="0.00"
                 style="width:100%;padding:4px 6px;font-size:12px;text-align:right;${carry?'color:var(--txt2);font-style:italic':''}"
                 title="${carry?'Copiado del mes anterior — editá para cambiar':''}"
-                onchange="setImporte('${it.cid}','${it.impId}',${mes},${anio},this.value);this.style.color='';this.style.fontStyle=''">
+                onchange="setImporte('${it.cid}','${it.impId}',${mes},${anio},this.value);this.style.color='';this.style.fontStyle=''">`
+              }
             </td>
             <td>
               <select style="font-size:11px;padding:3px 5px;width:100%" onchange="setEstado('${it.cid}','${it.impId}',${mes},${anio},this.value)">
@@ -1091,13 +1135,14 @@ function genRec(){
 
   // Respetar filtros de clientes activos en la agenda
   const clisFiltrados = agCliSeleccionados.size > 0
-    ? clis.filter(c=>agCliSeleccionados.has(c.id))
-    : clis;
+    ? clis.filter(c=>agCliSeleccionados.has(c.id) && c.activo!==false)
+    : clis.filter(c=>c.activo!==false);
 
   const agr={};
   clisFiltrados.forEach(c=>{
     (c.imps||[]).forEach(id=>{
       const imp=imps.find(x=>x.id===id);if(!imp)return;
+      if(imp.nat==='inf')return; // informativas no generan recordatorio
       const d=getVto(imp,mes,c.cuit);if(!d)return;
       const monto=getImporte(c.id,id,mes,anio);
       if(!monto||parseFloat(monto)<=0)return;
@@ -1343,6 +1388,21 @@ async function updateSaludo(id, val){
   sC();
 }
 
+async function updateCierreMes(id, val){
+  const c=clis.find(x=>x.id===id);
+  if(!c)return;
+  c.cierreMes=parseInt(val)||12;
+  sC();
+}
+
+function toggleActivo(id){
+  const c=clis.find(x=>x.id===id);
+  if(!c)return;
+  c.activo = c.activo===false ? true : false;
+  sC();
+  rCli();
+}
+
 function openMC(id=null){
   editId=id;
   document.getElementById('mc-t').textContent=id?'Editar cliente':'Nuevo cliente';
@@ -1352,6 +1412,7 @@ function openMC(id=null){
   document.getElementById('c-e').value=c?.email||'';
   document.getElementById('c-w').value=c?.wsp||'';
   document.getElementById('c-sal').value=c?.saludo||'';
+  document.getElementById('c-cierre').value=c?.cierreMes||12;
   document.getElementById('c-i').value=c?.iva||'Monotributista';
   document.getElementById('ci-chk').innerHTML=imps.map(i=>{
     const s=c?.imps?.includes(i.id);
@@ -1365,7 +1426,7 @@ function saveCli(){
   const nom=document.getElementById('c-n').value.trim(),cuit=document.getElementById('c-c').value.trim();
   if(!nom||!cuit){alert('Nombre y CUIT son obligatorios');return;}
   const ci=[...document.querySelectorAll('#ci-chk input:checked')].map(x=>x.value);
-  const obj={nom,cuit,iva:document.getElementById('c-i').value,email:document.getElementById('c-e').value.trim(),wsp:document.getElementById('c-w').value.trim(),saludo:document.getElementById('c-sal').value.trim(),imps:ci};
+  const obj={nom,cuit,iva:document.getElementById('c-i').value,email:document.getElementById('c-e').value.trim(),wsp:document.getElementById('c-w').value.trim(),saludo:document.getElementById('c-sal').value.trim(),cierreMes:parseInt(document.getElementById('c-cierre').value)||12,imps:ci};
   if(editId){const idx=clis.findIndex(x=>x.id===editId);clis[idx]={...clis[idx],...obj};}
   else{clis.push({id:'c'+Date.now(),...obj});}
   sC();cm('mo-cli');rAll();
@@ -1381,13 +1442,20 @@ function openMI(id=null){
   document.getElementById('i-t').value=i?.tipo||'fijo';
   document.getElementById('i-dia').value=i?.dia||'';
   document.getElementById('i-ak').value=i?.arcaKey||'mono';
-  document.getElementById('i-f').value=i?.fuente||'ARCA';
+  document.getElementById('i-frec').value=i?.frec||'mensual';
+  document.getElementById('i-periodo').value=i?.periodo||'vencido';
+  document.getElementById('i-meses').value=i?.mesesCierre||'';
+  document.getElementById('i-nat').value=i?.nat||'det';
+  document.getElementById('i-f') && (document.getElementById('i-f').value=i?.fuente||'ARCA');
   togDia();om('mo-imp');
 }
 function togDia(){
-  const v=document.getElementById('i-t')?.value;
-  document.getElementById('i-dia-w').style.display=v==='fijo'?'flex':'none';
-  document.getElementById('i-arca-w').style.display=v==='arca'?'flex':'none';
+  const t=document.getElementById('i-t')?.value;
+  const frec=document.getElementById('i-frec')?.value;
+  document.getElementById('i-dia-w').style.display=t==='fijo'?'flex':'none';
+  document.getElementById('i-arca-w').style.display=t==='arca'?'flex':'none';
+  document.getElementById('i-periodo-w').style.display=frec==='mensual'?'flex':'none';
+  document.getElementById('i-meses-w').style.display=frec==='anual'?'flex':'none';
 }
 function delI(id){
   if(!confirm('¿Eliminar esta obligación? Se quitará de todos los clientes.'))return;
@@ -1399,7 +1467,17 @@ function saveImp(){
   const a=document.getElementById('i-a').value.trim(),d=document.getElementById('i-d').value.trim();
   if(!a||!d){alert('Código y descripción son obligatorios');return;}
   const t=document.getElementById('i-t').value;
-  const obj={abrev:a,desc:d,tipo:t,dia:t==='fijo'?parseInt(document.getElementById('i-dia').value)||null:null,arcaKey:t==='arca'?document.getElementById('i-ak').value:null,fuente:document.getElementById('i-f').value};
+  const frec=document.getElementById('i-frec').value;
+  const obj={
+    abrev:a, desc:d, tipo:t,
+    dia:t==='fijo'?parseInt(document.getElementById('i-dia').value)||null:null,
+    arcaKey:t==='arca'?document.getElementById('i-ak').value:null,
+    frec,
+    periodo:frec==='mensual'?document.getElementById('i-periodo').value:'—',
+    mesesCierre:frec==='anual'?parseInt(document.getElementById('i-meses').value)||null:null,
+    nat:document.getElementById('i-nat').value,
+    fuente:(document.getElementById('i-f')?.value||'ARCA')
+  };
   if(editImpId){const idx=imps.findIndex(x=>x.id===editImpId);imps[idx]={...imps[idx],...obj};}
   else{imps.push({id:a,...obj});}
   sI();cm('mo-imp');rImps();
@@ -2143,6 +2221,25 @@ function filtrarVtoOpts(){
   poblarVtoSelector(q);
 }
 
+function abrirEditorVto(id){
+  // Seleccionar la obligación y renderizar
+  const imp = imps.find(x=>x.id===id);
+  if(!imp) return;
+  // Forzar el valor en el selector legacy (para que rVto funcione)
+  const sel = document.getElementById('vto-imp');
+  if(sel) sel.value = id;
+  // Mostrar panel inline
+  document.getElementById('vto-inline-titulo').textContent = `${imp.abrev} — ${imp.desc}`;
+  document.getElementById('vto-inline').style.display = 'block';
+  // Scroll hasta el panel
+  document.getElementById('vto-inline').scrollIntoView({behavior:'smooth', block:'start'});
+  rVto();
+}
+
+function cerrarEditorVto(){
+  document.getElementById('vto-inline').style.display = 'none';
+}
+
 function rVto(){
   const id = document.getElementById('vto-imp')?.value;
   const cont = document.getElementById('vto-cont');
@@ -2168,25 +2265,28 @@ function rVto(){
     </div>`;
 
   if(esFijo){
-    // Día fijo: una sola columna, aplica a todos los CUITs
-    html += `<div style="overflow-x:auto"><table style="min-width:320px">
+    // Día fijo: misma tabla de 10 terminaciones, precargado con el mismo día
+    html += `<div style="overflow-x:auto"><table style="min-width:780px">
       <thead><tr>
-        <th style="width:130px">Mes</th>
-        <th><span class="badge bb">Día de vencimiento</span></th>
-        <th style="font-size:11px;color:var(--txt2)">Aplica igual para todos los CUITs</th>
+        <th style="width:100px">Mes</th>
+        ${[0,1,2,3,4,5,6,7,8,9].map(t=>`<th style="text-align:center"><span class="badge ${t<=3?'bb':t<=6?'bg':'bp'}" style="font-size:10px">…${t}</span></th>`).join('')}
       </tr></thead><tbody>`;
     MESES.forEach((mes,mi)=>{
-      const dia = VTO[id][mi]?.[0] ?? '';
-      html += `<tr>
-        <td style="font-weight:500;font-size:13px">${mes}</td>
-        <td><input type="number" min="1" max="31"
-          value="${dia}" placeholder="—"
-          style="width:80px;text-align:center;padding:5px 8px;font-size:13px"
-          oninput="setVtoFijo('${id}',${mi},this.value)"></td>
-        <td style="font-size:11px;color:var(--txt2)">CUIT 0–9</td>
-      </tr>`;
+      const fila = VTO[id][mi] || Array(10).fill(null);
+      html += `<tr><td style="font-weight:500;font-size:13px">${mes}</td>`;
+      [0,1,2,3,4,5,6,7,8,9].forEach(t=>{
+        const v = fila[t]!==null&&fila[t]!==undefined ? fila[t] : '';
+        html += `<td><input type="number" min="1" max="31"
+          value="${v}" placeholder="—"
+          style="width:54px;text-align:center;padding:4px 4px;font-size:12px"
+          oninput="setVtoTerminacion('${id}',${mi},${t},this.value)"></td>`;
+      });
+      html += `</tr>`;
     });
-    html += `</tbody></table></div>`;
+    html += `</tbody></table></div>
+    <div style="margin-top:8px;font-size:11px;color:var(--txt2)">
+      Precargado con día ${imp.dia||'?'} para todas las terminaciones — podés personalizar cada una individualmente.
+    </div>`;
   } else {
     // ARCA y manuales: 10 columnas individuales (terminación 0 a 9)
     html += `<div style="overflow-x:auto"><table style="min-width:780px">
@@ -2226,7 +2326,6 @@ function setVtoFijo(id, mes, val){
   const d = val===''||val===null ? null : parseInt(val);
   VTO[id][mes] = Array(10).fill(d); // mismo día para las 10 terminaciones
 }
-
 function setVtoTerminacion(id, mes, terminacion, val){
   if(!VTO[id]) return;
   if(!VTO[id][mes]) VTO[id][mes] = Array(10).fill(null);
@@ -2272,7 +2371,6 @@ function getVto(imp, mes, cuit){
   if(imp.tipo==='fijo') return imp.dia||null;
   return null;
 }
-
 load();
 </script>
 </body>
