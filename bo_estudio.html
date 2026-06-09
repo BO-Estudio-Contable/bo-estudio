@@ -225,24 +225,27 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--green)}
 <!-- AGENDA -->
 <div id="sec-ag" class="sec">
   <div class="card" style="margin-bottom:12px;padding:12px 16px">
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;align-items:end">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;align-items:end">
       <div class="fg">
-        <label>Mes / Año</label>
-        <div style="position:relative">
-          <div id="ag-mes-display" onclick="toggleListaMes()" style="padding:6px 9px;border:0.5px solid var(--bdr2);border-radius:var(--rad);background:var(--bg);cursor:pointer;font-size:12px;color:var(--txt2);display:flex;align-items:center;justify-content:space-between;min-height:32px">
-            <span id="ag-mes-label">Mes actual</span>
-            <i class="ti ti-chevron-down" style="font-size:11px;flex-shrink:0"></i>
-          </div>
-          <div id="ag-mes-drop" style="display:none;position:absolute;top:100%;left:0;right:0;min-width:200px;background:var(--bg);border:0.5px solid var(--bdr2);border-radius:var(--rad);z-index:200;box-shadow:0 4px 12px rgba(0,0,0,.15)">
-            <div style="padding:4px 8px;border-bottom:0.5px solid var(--bdr);display:flex;gap:8px">
-              <span style="font-size:11px;color:var(--green);cursor:pointer" onclick="selTodosMeses()">Año completo</span>
-              <span style="font-size:11px;color:var(--txt2)">·</span>
-              <span style="font-size:11px;color:var(--txt2);cursor:pointer" onclick="selMesActual()">Mes actual</span>
-              <span style="font-size:11px;color:var(--txt2)">·</span>
-              <span style="font-size:11px;color:var(--txt2);cursor:pointer" onclick="agMesesSel.clear();actualizarLabelMes();rAg()">Limpiar</span>
+        <label>Mes/Año de Agenda</label>
+        <div style="display:flex;gap:6px;align-items:center">
+          <div style="position:relative;flex:1">
+            <div id="ag-mes-display" onclick="toggleListaMes()" style="padding:6px 9px;border:0.5px solid var(--bdr2);border-radius:var(--rad);background:var(--bg);cursor:pointer;font-size:12px;color:var(--txt2);display:flex;align-items:center;justify-content:space-between;min-height:32px">
+              <span id="ag-mes-label">Mes actual</span>
+              <i class="ti ti-chevron-down" style="font-size:11px;flex-shrink:0"></i>
             </div>
-            <div id="ag-mes-lista" style="max-height:220px;overflow-y:auto"></div>
+            <div id="ag-mes-drop" style="display:none;position:absolute;top:100%;left:0;right:0;min-width:200px;background:var(--bg);border:0.5px solid var(--bdr2);border-radius:var(--rad);z-index:200;box-shadow:0 4px 12px rgba(0,0,0,.15)">
+              <div style="padding:4px 8px;border-bottom:0.5px solid var(--bdr);display:flex;gap:8px">
+                <span style="font-size:11px;color:var(--green);cursor:pointer" onclick="selTodosMeses()">Año completo</span>
+                <span style="font-size:11px;color:var(--txt2)">·</span>
+                <span style="font-size:11px;color:var(--txt2);cursor:pointer" onclick="selMesActual()">Mes actual</span>
+                <span style="font-size:11px;color:var(--txt2)">·</span>
+                <span style="font-size:11px;color:var(--txt2);cursor:pointer" onclick="agMesesSel.clear();actualizarLabelMes();rAg()">Limpiar</span>
+              </div>
+              <div id="ag-mes-lista" style="max-height:220px;overflow-y:auto"></div>
+            </div>
           </div>
+          <select id="ag-anio" onchange="actualizarLabelMes();rAg()" style="width:74px;padding:5px 4px;font-size:12px"></select>
         </div>
         <select id="smes" style="display:none"></select>
       </div>
@@ -298,13 +301,13 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--green)}
           <option value="con">Con importe</option>
         </select>
       </div>
-      <div style="display:flex;align-items:flex-end;gap:8px">
-        <button class="btn bsm" onclick="limpiarFiltrosAg()" title="Limpiar filtros"><i class="ti ti-x"></i> Limpiar</button>
-        <button class="btn bsm" onclick="exportarAgendaExcel()" title="Exportar a Excel"><i class="ti ti-file-spreadsheet"></i> Excel</button>
-        <button class="btn bsm" onclick="genRec()"><i class="ti ti-brand-whatsapp"></i> Recordatorios</button>
-      </div>
     </div>
-    <div style="margin-top:8px;font-size:11px;color:var(--txt2)" id="ag-tot"></div>
+    <div style="display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap">
+      <button class="btn bsm" onclick="limpiarFiltrosAg()"><i class="ti ti-x"></i> Limpiar filtros</button>
+      <button class="btn bsm" onclick="exportarAgendaExcel()"><i class="ti ti-file-spreadsheet"></i> Exportar Excel</button>
+      <button class="btn btnp bsm" onclick="genRec()"><i class="ti ti-brand-whatsapp"></i> Generar recordatorios</button>
+      <span id="ag-tot" style="font-size:11px;color:var(--txt2);margin-left:4px"></span>
+    </div>
   </div>
   <div id="ag-cont"></div>
 </div>
@@ -688,6 +691,7 @@ function load(){
   loadVto();
   loadCaja();
   precargarImportes();
+  initAnioSel();
   actualizarLabelMes();
   initVtoSelector();
   rAll();
@@ -867,6 +871,23 @@ function setEstado(cid, impId, mes, anio, val){
 // ── FILTRO MES AGENDA (multi-select) ─────────────────────────────
 let agMesesSel = new Set([new Date().getMonth()]); // mes actual por defecto
 
+function getAnio(){
+  return parseInt(document.getElementById('ag-anio')?.value)||new Date().getFullYear();
+}
+
+function initAnioSel(){
+  const sel=document.getElementById('ag-anio');
+  if(!sel)return;
+  const actual=new Date().getFullYear();
+  // Mostrar 3 años atrás y 3 adelante
+  for(let y=actual-2; y<=actual+3; y++){
+    const opt=document.createElement('option');
+    opt.value=y; opt.textContent=y;
+    if(y===actual) opt.selected=true;
+    sel.appendChild(opt);
+  }
+}
+
 function toggleListaMes(){
   const drop=document.getElementById('ag-mes-drop');
   if(drop.style.display==='none'){
@@ -880,7 +901,7 @@ function toggleListaMes(){
 function renderListaMes(){
   const lista=document.getElementById('ag-mes-lista');
   if(!lista)return;
-  const anio=new Date().getFullYear();
+  const anio=getAnio();
   lista.innerHTML=MESES.map((m,i)=>{
     const sel=agMesesSel.has(i);
     const mm=String(i+1).padStart(2,'0');
@@ -910,6 +931,8 @@ function selTodosMeses(){
 function selMesActual(){
   agMesesSel.clear();
   agMesesSel.add(new Date().getMonth());
+  const sel=document.getElementById('ag-anio');
+  if(sel) sel.value=new Date().getFullYear();
   renderListaMes();
   actualizarLabelMes();
   rAg();
@@ -918,7 +941,7 @@ function selMesActual(){
 function actualizarLabelMes(){
   const lbl=document.getElementById('ag-mes-label');
   if(!lbl)return;
-  const anio=new Date().getFullYear();
+  const anio=getAnio();
   if(agMesesSel.size===0){
     lbl.textContent='Sin mes seleccionado'; lbl.style.color='var(--txt2)';
   } else if(agMesesSel.size===12){
@@ -1112,7 +1135,7 @@ function limpiarFiltrosAg(){
 function rAg(){
   const mesesActivos=[...agMesesSel].sort((a,b)=>a-b);
   if(!mesesActivos.length){ document.getElementById('ag-cont').innerHTML='<div class="es">Seleccioná al menos un mes</div>'; return; }
-  const anio=new Date().getFullYear();
+  const anio=getAnio();
   const fi=document.getElementById('ag-fi')?.value||'';
   const perFil=(document.getElementById('ag-per')?.value||'').trim();
   const impFil=document.getElementById('ag-imp-fil')?.value||'';
@@ -1215,7 +1238,7 @@ function rAg(){
 function exportarAgendaExcel(){
   const mesesActivos=[...agMesesSel].sort((a,b)=>a-b);
   if(!mesesActivos.length){alert('Seleccioná al menos un mes');return;}
-  const anio=new Date().getFullYear();
+  const anio=getAnio();
   const perFil=(document.getElementById('ag-per')?.value||'').trim();
   const impFil=document.getElementById('ag-imp-fil')?.value||'';
 
@@ -1290,7 +1313,7 @@ function genRec(){
   const mesesActivos=[...agMesesSel].sort((a,b)=>a-b);
   if(!mesesActivos.length){alert('Seleccioná al menos un mes');return;}
   const mes=mesesActivos[0]; // usar primer mes seleccionado para el recordatorio
-  const anio=new Date().getFullYear();
+  const anio=getAnio();
   const ESTADOS_INCLUIR = ['pendiente','impago'];
 
   // Respetar filtros de clientes activos en la agenda
