@@ -115,6 +115,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--green)}
   .content{padding:12px}
 }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 <div class="app">
@@ -226,13 +227,24 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--green)}
   <div class="card" style="margin-bottom:12px;padding:12px 16px">
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;align-items:end">
       <div class="fg">
-        <label>Mes</label>
-        <select id="smes" onchange="rAg()">
-          <option value="0">Enero</option><option value="1">Febrero</option><option value="2">Marzo</option>
-          <option value="3">Abril</option><option value="4">Mayo</option><option value="5">Junio</option>
-          <option value="6">Julio</option><option value="7">Agosto</option><option value="8">Septiembre</option>
-          <option value="9">Octubre</option><option value="10">Noviembre</option><option value="11">Diciembre</option>
-        </select>
+        <label>Mes / Año</label>
+        <div style="position:relative">
+          <div id="ag-mes-display" onclick="toggleListaMes()" style="padding:6px 9px;border:0.5px solid var(--bdr2);border-radius:var(--rad);background:var(--bg);cursor:pointer;font-size:12px;color:var(--txt2);display:flex;align-items:center;justify-content:space-between;min-height:32px">
+            <span id="ag-mes-label">Mes actual</span>
+            <i class="ti ti-chevron-down" style="font-size:11px;flex-shrink:0"></i>
+          </div>
+          <div id="ag-mes-drop" style="display:none;position:absolute;top:100%;left:0;right:0;min-width:200px;background:var(--bg);border:0.5px solid var(--bdr2);border-radius:var(--rad);z-index:200;box-shadow:0 4px 12px rgba(0,0,0,.15)">
+            <div style="padding:4px 8px;border-bottom:0.5px solid var(--bdr);display:flex;gap:8px">
+              <span style="font-size:11px;color:var(--green);cursor:pointer" onclick="selTodosMeses()">Año completo</span>
+              <span style="font-size:11px;color:var(--txt2)">·</span>
+              <span style="font-size:11px;color:var(--txt2);cursor:pointer" onclick="selMesActual()">Mes actual</span>
+              <span style="font-size:11px;color:var(--txt2)">·</span>
+              <span style="font-size:11px;color:var(--txt2);cursor:pointer" onclick="agMesesSel.clear();actualizarLabelMes();rAg()">Limpiar</span>
+            </div>
+            <div id="ag-mes-lista" style="max-height:220px;overflow-y:auto"></div>
+          </div>
+        </div>
+        <select id="smes" style="display:none"></select>
       </div>
       <div class="fg">
         <label>Cliente</label>
@@ -288,6 +300,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--green)}
       </div>
       <div style="display:flex;align-items:flex-end;gap:8px">
         <button class="btn bsm" onclick="limpiarFiltrosAg()" title="Limpiar filtros"><i class="ti ti-x"></i> Limpiar</button>
+        <button class="btn bsm" onclick="exportarAgendaExcel()" title="Exportar a Excel"><i class="ti ti-file-spreadsheet"></i> Excel</button>
         <button class="btn bsm" onclick="genRec()"><i class="ti ti-brand-whatsapp"></i> Recordatorios</button>
       </div>
     </div>
@@ -675,7 +688,7 @@ function load(){
   loadVto();
   loadCaja();
   precargarImportes();
-  document.getElementById('smes').value=new Date().getMonth();
+  actualizarLabelMes();
   initVtoSelector();
   rAll();
 }
@@ -851,6 +864,84 @@ function setEstado(cid, impId, mes, anio, val){
   }
 }
 
+// ── FILTRO MES AGENDA (multi-select) ─────────────────────────────
+let agMesesSel = new Set([new Date().getMonth()]); // mes actual por defecto
+
+function toggleListaMes(){
+  const drop=document.getElementById('ag-mes-drop');
+  if(drop.style.display==='none'){
+    renderListaMes();
+    drop.style.display='block';
+  } else {
+    drop.style.display='none';
+  }
+}
+
+function renderListaMes(){
+  const lista=document.getElementById('ag-mes-lista');
+  if(!lista)return;
+  const anio=new Date().getFullYear();
+  lista.innerHTML=MESES.map((m,i)=>{
+    const sel=agMesesSel.has(i);
+    const mm=String(i+1).padStart(2,'0');
+    return`<div class="cli-drop-item${sel?' selected':''}" onclick="toggleMesAg(${i},event)">
+      <input type="checkbox" ${sel?'checked':''} style="width:auto;pointer-events:none;flex-shrink:0">
+      <span style="flex:1">${mm}/${anio} — ${m}</span>
+    </div>`;
+  }).join('');
+}
+
+function toggleMesAg(mes, e){
+  e?.stopPropagation();
+  if(agMesesSel.has(mes)) agMesesSel.delete(mes);
+  else agMesesSel.add(mes);
+  renderListaMes();
+  actualizarLabelMes();
+  rAg();
+}
+
+function selTodosMeses(){
+  for(let i=0;i<12;i++) agMesesSel.add(i);
+  renderListaMes();
+  actualizarLabelMes();
+  rAg();
+}
+
+function selMesActual(){
+  agMesesSel.clear();
+  agMesesSel.add(new Date().getMonth());
+  renderListaMes();
+  actualizarLabelMes();
+  rAg();
+}
+
+function actualizarLabelMes(){
+  const lbl=document.getElementById('ag-mes-label');
+  if(!lbl)return;
+  const anio=new Date().getFullYear();
+  if(agMesesSel.size===0){
+    lbl.textContent='Sin mes seleccionado'; lbl.style.color='var(--txt2)';
+  } else if(agMesesSel.size===12){
+    lbl.textContent=`Año completo ${anio}`; lbl.style.color='var(--green-lt)';
+  } else if(agMesesSel.size===1){
+    const m=[...agMesesSel][0];
+    lbl.textContent=`${String(m+1).padStart(2,'0')}/${anio}`; lbl.style.color='var(--txt)';
+  } else {
+    const sorted=[...agMesesSel].sort((a,b)=>a-b);
+    lbl.textContent=sorted.map(i=>`${String(i+1).padStart(2,'0')}/${anio}`).join(', ');
+    lbl.style.color='var(--green-lt)';
+  }
+}
+
+// Cerrar dropdown mes al hacer click fuera
+document.addEventListener('click', function(e){
+  const wrap=document.getElementById('ag-mes-drop')?.parentElement;
+  if(wrap && !wrap.contains(e.target)){
+    const drop=document.getElementById('ag-mes-drop');
+    if(drop) drop.style.display='none';
+  }
+});
+
 // ── FILTRO CLIENTE AGENDA (multi-select) ─────────────────────────
 let agCliSeleccionados = new Set(); // IDs seleccionados
 
@@ -1006,8 +1097,11 @@ document.addEventListener('click', function(e){
 function limpiarFiltrosAg(){
   agCliSeleccionados.clear();
   agImpSeleccionados.clear();
+  agMesesSel.clear();
+  agMesesSel.add(new Date().getMonth());
   actualizarLabelCli();
   actualizarLabelImp();
+  actualizarLabelMes();
   if(document.getElementById('ag-q-search')) document.getElementById('ag-q-search').value='';
   if(document.getElementById('ag-fi-search')) document.getElementById('ag-fi-search').value='';
   document.getElementById('ag-per').value='';
@@ -1016,56 +1110,58 @@ function limpiarFiltrosAg(){
 }
 
 function rAg(){
-  const mes=parseInt(document.getElementById('smes')?.value||new Date().getMonth());
+  const mesesActivos=[...agMesesSel].sort((a,b)=>a-b);
+  if(!mesesActivos.length){ document.getElementById('ag-cont').innerHTML='<div class="es">Seleccioná al menos un mes</div>'; return; }
   const anio=new Date().getFullYear();
-  const q=(document.getElementById('ag-q')?.value||'').toLowerCase();
-  const fi=document.getElementById('ag-fi')?.value||''; // legacy fallback
+  const fi=document.getElementById('ag-fi')?.value||'';
   const perFil=(document.getElementById('ag-per')?.value||'').trim();
   const impFil=document.getElementById('ag-imp-fil')?.value||'';
   const hoy=new Date(),mh=hoy.getMonth(),dh=hoy.getDate();
+  // agr: key = "mes_dia" → {mes, dia, items:[]}
   const agr={};
 
-  // Filtro cliente: por IDs seleccionados o todos
   const clisFiltrados = agCliSeleccionados.size > 0
     ? clis.filter(c=>agCliSeleccionados.has(c.id) && c.activo!==false)
     : clis.filter(c=>c.activo!==false);
 
-  clisFiltrados.forEach(c=>{
-    (c.imps||[]).forEach(id=>{
-      // Filtro por obligación (multi-select)
-      if(agImpSeleccionados.size>0 && !agImpSeleccionados.has(id))return;
-      const imp=imps.find(x=>x.id===id);if(!imp)return;
-      const d=getVto(imp,mes,c.cuit);if(!d)return;
-      const periodo=getPeriodo(id,mes,anio);
-      // Filtro por período
-      if(perFil&&!periodo.includes(perFil))return;
-      // Filtro por importe
-      const monto=getImporte(c.id,id,mes,anio);
-      if(impFil==='sin'&&monto&&parseFloat(monto)>0)return;
-      if(impFil==='con'&&(!monto||parseFloat(monto)<=0))return;
-      if(!agr[d])agr[d]=[];
-      // Si es informativa, marcar automáticamente como pagado
-      if(imp.nat === 'inf'){
-        const estadoActual = getEstado(c.id, id, mes, anio);
-        if(estadoActual === 'pendiente') setEstado(c.id, id, mes, anio, 'pagado');
-      }
-      agr[d].push({cid:c.id, c:c.nom, impId:id, imp:imp.abrev, cuit:c.cuit, wsp:c.wsp, periodo, nat:imp.nat||'det'});
+  mesesActivos.forEach(mes=>{
+    clisFiltrados.forEach(c=>{
+      (c.imps||[]).forEach(id=>{
+        if(agImpSeleccionados.size>0 && !agImpSeleccionados.has(id))return;
+        const imp=imps.find(x=>x.id===id);if(!imp)return;
+        const d=getVto(imp,mes,c.cuit);if(!d)return;
+        const periodo=getPeriodo(id,mes,anio);
+        if(perFil&&!periodo.includes(perFil))return;
+        const monto=getImporte(c.id,id,mes,anio);
+        if(impFil==='sin'&&monto&&parseFloat(monto)>0)return;
+        if(impFil==='con'&&(!monto||parseFloat(monto)<=0))return;
+        if(imp.nat==='inf'){
+          const estadoActual=getEstado(c.id,id,mes,anio);
+          if(estadoActual==='pendiente') setEstado(c.id,id,mes,anio,'pagado');
+        }
+        const key=`${mes}_${d}`;
+        if(!agr[key])agr[key]={mes,dia:d,items:[]};
+        agr[key].items.push({cid:c.id, c:c.nom, impId:id, imp:imp.abrev, cuit:c.cuit, wsp:c.wsp, periodo, nat:imp.nat||'det'});
+      });
     });
   });
-  const dias=Object.keys(agr).map(Number).sort((a,b)=>a-b);
-  let tot=0;dias.forEach(d=>tot+=agr[d].length);
-  const filtrosActivos=[agCliSeleccionados.size>0,agImpSeleccionados.size>0,perFil,impFil].filter(Boolean).length;
-  document.getElementById('ag-tot').innerHTML=`<b>${tot} vencimiento(s)</b> · ${MESES[mes]} ${anio}${filtrosActivos?` · <span style="color:var(--amber)">${filtrosActivos} filtro(s) activo(s)</span>`:''}`;
+
+  const entradas=Object.values(agr).sort((a,b)=>a.mes!==b.mes?a.mes-b.mes:a.dia-b.dia);
+  let tot=0;entradas.forEach(e=>tot+=e.items.length);
+  const filtrosActivos=[agMesesSel.size!==1,agCliSeleccionados.size>0,agImpSeleccionados.size>0,perFil,impFil].filter(Boolean).length;
+  const mesLabel=agMesesSel.size===12?`Año ${anio}`:agMesesSel.size===1?`${MESES[[...agMesesSel][0]]} ${anio}`:`${agMesesSel.size} meses`;
+  document.getElementById('ag-tot').innerHTML=`<b>${tot} vencimiento(s)</b> · ${mesLabel}${filtrosActivos?` · <span style="color:var(--amber)">${filtrosActivos} filtro(s) activo(s)</span>`:''}`;
   const ac=document.getElementById('ag-cont');
-  if(!dias.length){ac.innerHTML='<div class="card"><div class="es">Sin vencimientos para este mes.</div></div>';return;}
-  ac.innerHTML=dias.map(dia=>{
+  if(!entradas.length){ac.innerHTML='<div class="card"><div class="es">Sin vencimientos para los meses seleccionados.</div></div>';return;}
+  ac.innerHTML=entradas.map(({mes,dia,items:itms})=>{
     const pas=mes<mh||(mes===mh&&dia<dh),urg=mes===mh&&dia>=dh&&(dia-dh)<=3;
+    const agr_dia=itms; // alias for inner references
     return`<div class="card" style="margin-bottom:8px">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
         <div style="font-size:24px;font-weight:700;color:${pas?'var(--txt3)':urg?'var(--red)':'var(--green)'};min-width:34px">${dia}</div>
         <div style="font-size:14px;font-weight:500">${MESES[mes]}</div>
         ${pas?'<span class="badge bgr">Pasado</span>':urg?'<span class="badge br">Urgente</span>':'<span class="badge bg">Pendiente</span>'}
-        <span style="font-size:12px;color:var(--txt2);margin-left:auto">${agr[dia].length} vencimiento(s)</span>
+        <span style="font-size:12px;color:var(--txt2);margin-left:auto">${itms.length} vencimiento(s)</span>
       </div>
       <table style="width:100%;table-layout:fixed">
         <thead><tr>
@@ -1078,7 +1174,7 @@ function rAg(){
           <th style="width:12%;font-size:10px">CUIT</th>
         </tr></thead>
         <tbody>
-        ${agr[dia].map(it=>{
+        ${itms.map(it=>{
           const imp_val = getImporte(it.cid, it.impId, mes, anio);
           const estado = getEstado(it.cid, it.impId, mes, anio);
           const est = ESTADOS.find(x=>x.val===estado)||ESTADOS[0];
@@ -1116,6 +1212,68 @@ function rAg(){
 
 
 
+function exportarAgendaExcel(){
+  const mesesActivos=[...agMesesSel].sort((a,b)=>a-b);
+  if(!mesesActivos.length){alert('Seleccioná al menos un mes');return;}
+  const anio=new Date().getFullYear();
+  const perFil=(document.getElementById('ag-per')?.value||'').trim();
+  const impFil=document.getElementById('ag-imp-fil')?.value||'';
+
+  const clisFiltrados = agCliSeleccionados.size > 0
+    ? clis.filter(c=>agCliSeleccionados.has(c.id) && c.activo!==false)
+    : clis.filter(c=>c.activo!==false);
+
+  // Recolectar filas
+  const filas=[];
+  mesesActivos.forEach(mes=>{
+    clisFiltrados.forEach(c=>{
+      (c.imps||[]).forEach(id=>{
+        if(agImpSeleccionados.size>0 && !agImpSeleccionados.has(id))return;
+        const imp=imps.find(x=>x.id===id);if(!imp)return;
+        const d=getVto(imp,mes,c.cuit);if(!d)return;
+        const periodo=getPeriodo(id,mes,anio);
+        if(perFil&&!periodo.includes(perFil))return;
+        const montoRaw=getImporte(c.id,id,mes,anio);
+        const monto=montoRaw?parseFloat(montoRaw):null;
+        if(impFil==='sin'&&monto&&monto>0)return;
+        if(impFil==='con'&&!monto)return;
+        const estado=getEstado(c.id,id,mes,anio);
+        const estadoLabel=ESTADOS.find(x=>x.val===estado)?.label||estado;
+        filas.push({
+          'Mes': `${String(mes+1).padStart(2,'0')}/${anio}`,
+          'Vencimiento': `${String(d).padStart(2,'0')}/${String(mes+1).padStart(2,'0')}/${anio}`,
+          'Cliente': c.nom.replace(/,/g,'').trim(),
+          'CUIT': c.cuit,
+          'Obligación': imp.abrev,
+          'Descripción': imp.desc,
+          'Período': periodo,
+          'Naturaleza': (imp.nat||'det')==='inf'?'Informativa':'Determinativa',
+          'Importe ($)': monto||'',
+          'Estado': estadoLabel
+        });
+      });
+    });
+  });
+
+  if(!filas.length){alert('No hay datos para exportar con los filtros actuales');return;}
+
+  // Crear workbook con SheetJS
+  const wb=XLSX.utils.book_new();
+  const ws=XLSX.utils.json_to_sheet(filas);
+
+  // Ancho de columnas
+  ws['!cols']=[
+    {wch:10},{wch:14},{wch:35},{wch:16},{wch:14},
+    {wch:35},{wch:10},{wch:14},{wch:14},{wch:20}
+  ];
+
+  XLSX.utils.book_append_sheet(wb, ws, 'Agenda');
+
+  // Nombre del archivo
+  const mesLabel=agMesesSel.size===12?`${anio}`:agMesesSel.size===1?`${String([...agMesesSel][0]+1).padStart(2,'0')}-${anio}`:`varios-${anio}`;
+  XLSX.writeFile(wb, `BO_Agenda_${mesLabel}.xlsx`);
+}
+
 // ── RECORDATORIOS ────────────────────────────────────────────────
 let recsData = []; // cache de recordatorios generados
 
@@ -1129,7 +1287,9 @@ function setRecEnviado(cid, mes, anio){
 }
 
 function genRec(){
-  const mes=parseInt(document.getElementById('smes')?.value||new Date().getMonth());
+  const mesesActivos=[...agMesesSel].sort((a,b)=>a-b);
+  if(!mesesActivos.length){alert('Seleccioná al menos un mes');return;}
+  const mes=mesesActivos[0]; // usar primer mes seleccionado para el recordatorio
   const anio=new Date().getFullYear();
   const ESTADOS_INCLUIR = ['pendiente','impago'];
 
