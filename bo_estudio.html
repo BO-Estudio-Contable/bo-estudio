@@ -1533,7 +1533,11 @@ function vRec(id){
     ${itemsHtml}
     ${r.ob?`<div class="rrow"><span style="color:var(--txt2)">Obs.</span><span>${r.ob}</span></div>`:''}
     <div class="rtot"><span>Total abonado</span><span style="color:var(--green)">$${Number(r.mo).toLocaleString('es-AR',{minimumFractionDigits:2})}</span></div>
-    <div style="margin-top:14px;text-align:center"><button class="btn btnp bsm" onclick="pRec('${r.id}')"><i class="ti ti-printer"></i> Imprimir / PDF</button></div>
+    <div style="margin-top:12px;font-size:10px;color:var(--txt2);text-align:center;border-top:0.5px solid var(--bdr);padding-top:10px;line-height:1.4">Documento no válido como Factura.<br>Elaborado solo a los fines de cobranza por cuenta y orden de terceros.</div>
+    <div style="margin-top:14px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+      <button class="btn btnp bsm" onclick="pRec('${r.id}')"><i class="ti ti-printer"></i> Imprimir / PDF</button>
+      <button class="btn bsm" onclick="emailRec('${r.id}')"><i class="ti ti-mail"></i> Enviar por email</button>
+    </div>
   </div>`;
 }
 function pRec(id){
@@ -1558,8 +1562,45 @@ function pRec(id){
     ${r.ob?`<tr><td style="color:#666">Obs.</td><td>${r.ob}</td></tr>`:''}
     <tr class="tot"><td>Total abonado</td><td style="color:#1D9E75;text-align:right">$${Number(r.mo).toLocaleString('es-AR',{minimumFractionDigits:2})}</td></tr>
   </table>
-  <footer>BO Estudio Contable</footer>
+  <footer>BO Estudio Contable<br><span style="font-size:9px">Documento no válido como Factura. Elaborado solo a los fines de cobranza por cuenta y orden de terceros.</span></footer>
   <script>window.print();<\/script></body></html>`);w.document.close();
+}
+
+function emailRec(id){
+  const r=recs.find(x=>x.id==id);if(!r)return;
+  const num=String(r.id).padStart(4,'0');
+  // Construir detalle de items
+  const detalleItems = r.items && r.items.length > 1
+    ? r.items.map(it=>`  - ${it.abrev}: $${Number(it.mo).toLocaleString('es-AR',{minimumFractionDigits:2})}`).join('\n')
+    : `  Concepto: ${r.im}`;
+  const asunto = encodeURIComponent(`Recibo N° ${num} - BO Estudio Contable`);
+  const cuerpo = encodeURIComponent(
+`Estimado/a ${r.cn},
+
+Adjuntamos el comprobante de pago correspondiente al recibo N° ${num}.
+
+Detalle:
+  Cliente: ${r.cn}
+  CUIT: ${r.cc}
+  Período: ${r.pe}
+  Fecha: ${r.fe}
+${detalleItems}
+
+  TOTAL ABONADO: $${Number(r.mo).toLocaleString('es-AR',{minimumFractionDigits:2})}
+${r.ob?'\n  Observaciones: '+r.ob:''}
+
+Para obtener el comprobante en PDF, utilizar la opción de impresión.
+
+Cualquier consulta, estamos a su disposición.
+
+Saludos,
+Ale y Mabel
+BO Estudio Contable de PyMES y Emprendedores`
+  );
+  // Buscar email del cliente
+  const c=clis.find(x=>x.nom===r.cn);
+  const email=c?.email||'';
+  window.location.href=`mailto:${email}?subject=${asunto}&body=${cuerpo}`;
 }
 
 
