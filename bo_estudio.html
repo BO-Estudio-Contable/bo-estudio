@@ -31,7 +31,7 @@
     --purple:#a29bfe;--purple-l:#1e1a40;
   }
 }
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg3);color:var(--txt);min-height:100vh}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh}
 .app{display:block;max-width:1200px;margin:0 auto;background:var(--bg);box-shadow:0 0 40px rgba(0,0,0,.1)}
 .hdr{background:var(--bg);border-bottom:0.5px solid var(--bdr);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;position:sticky;top:0;z-index:50}
 .logo{display:flex;align-items:center}.logo span{color:var(--green)}/* unused */
@@ -104,6 +104,9 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--green)}
 .asig-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:4px;max-height:240px;overflow-y:auto;padding:4px 0}
 .asig-item{display:flex;align-items:center;gap:6px;padding:5px 8px;border:0.5px solid var(--bdr);border-radius:var(--rad);cursor:pointer;font-size:12px;transition:background .1s}
 .asig-item:hover{background:var(--bg2)}
+.cli-drop-item{padding:7px 12px;font-size:12px;cursor:pointer;border-bottom:0.5px solid var(--bdr);display:flex;align-items:center;gap:8px}
+.cli-drop-item:hover{background:var(--bg2)}
+.cli-drop-item.selected{background:var(--green-l);color:var(--green-lt)}
 @media(max-width:600px){
   .fg2{grid-template-columns:1fr}
   .fgf{grid-column:1}
@@ -159,7 +162,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--green)}
     <span id="cli-cnt" style="font-size:12px;color:var(--txt2)"></span>
   </div>
   <div class="card"><div class="tw"><table>
-    <thead><tr><th>Nombre / Razón social</th><th>CUIT</th><th>Condición</th><th>Email</th><th>Obligaciones</th><th></th></tr></thead>
+    <thead><tr><th>Nombre / Razón social</th><th>CUIT</th><th>Condición</th><th>Email</th><th>Saludo</th><th>Obligaciones</th><th></th></tr></thead>
     <tbody id="tcli"></tbody>
   </table></div></div>
 </div>
@@ -207,17 +210,75 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--green)}
 
 <!-- AGENDA -->
 <div id="sec-ag" class="sec">
-  <div class="ar">
-    <select id="smes" onchange="rAg()" style="max-width:150px">
-      <option value="0">Enero</option><option value="1">Febrero</option><option value="2">Marzo</option>
-      <option value="3">Abril</option><option value="4">Mayo</option><option value="5">Junio</option>
-      <option value="6">Julio</option><option value="7">Agosto</option><option value="8">Septiembre</option>
-      <option value="9">Octubre</option><option value="10">Noviembre</option><option value="11">Diciembre</option>
-    </select>
-    <input type="text" id="ag-q" placeholder="Filtrar cliente..." oninput="rAg()" style="max-width:180px">
-    <select id="ag-fi" onchange="rAg()" style="max-width:180px"><option value="">Todas las obligaciones</option></select>
-    <button class="btn" onclick="genRec()"><i class="ti ti-brand-whatsapp"></i> Generar recordatorios</button>
-    <span id="ag-tot" style="font-size:12px;color:var(--txt2)"></span>
+  <div class="card" style="margin-bottom:12px;padding:12px 16px">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;align-items:end">
+      <div class="fg">
+        <label>Mes</label>
+        <select id="smes" onchange="rAg()">
+          <option value="0">Enero</option><option value="1">Febrero</option><option value="2">Marzo</option>
+          <option value="3">Abril</option><option value="4">Mayo</option><option value="5">Junio</option>
+          <option value="6">Julio</option><option value="7">Agosto</option><option value="8">Septiembre</option>
+          <option value="9">Octubre</option><option value="10">Noviembre</option><option value="11">Diciembre</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label>Cliente</label>
+        <div style="position:relative">
+          <div id="ag-q-display" onclick="toggleListaCli()" style="padding:6px 9px;border:0.5px solid var(--bdr2);border-radius:var(--rad);background:var(--bg);cursor:pointer;font-size:12px;color:var(--txt2);display:flex;align-items:center;justify-content:space-between;min-height:32px">
+            <span id="ag-q-label">Todos los clientes</span>
+            <i class="ti ti-chevron-down" style="font-size:11px;flex-shrink:0"></i>
+          </div>
+          <div id="ag-cli-drop" style="display:none;position:absolute;top:100%;left:0;right:0;min-width:240px;background:var(--bg);border:0.5px solid var(--bdr2);border-radius:var(--rad);z-index:200;box-shadow:0 4px 12px rgba(0,0,0,.15)">
+            <div style="padding:6px 8px;border-bottom:0.5px solid var(--bdr)">
+              <input type="text" id="ag-q-search" placeholder="Buscar cliente..." oninput="filtrarListaCli()" style="width:100%;font-size:12px" onclick="event.stopPropagation()">
+            </div>
+            <div style="padding:4px 8px;border-bottom:0.5px solid var(--bdr);display:flex;gap:8px">
+              <span style="font-size:11px;color:var(--green);cursor:pointer" onclick="selTodosCliAg(true)">Seleccionar todos</span>
+              <span style="font-size:11px;color:var(--txt2)">·</span>
+              <span style="font-size:11px;color:var(--txt2);cursor:pointer" onclick="selTodosCliAg(false)">Limpiar</span>
+            </div>
+            <div id="ag-cli-lista" style="max-height:200px;overflow-y:auto"></div>
+          </div>
+        </div>
+      </div>
+      <div class="fg">
+        <label>Obligación</label>
+        <div style="position:relative">
+          <div id="ag-fi-display" onclick="toggleListaImp()" style="padding:6px 9px;border:0.5px solid var(--bdr2);border-radius:var(--rad);background:var(--bg);cursor:pointer;font-size:12px;color:var(--txt2);display:flex;align-items:center;justify-content:space-between;min-height:32px">
+            <span id="ag-fi-label">Todas las obligaciones</span>
+            <i class="ti ti-chevron-down" style="font-size:11px;flex-shrink:0"></i>
+          </div>
+          <div id="ag-imp-drop" style="display:none;position:absolute;top:100%;left:0;right:0;min-width:240px;background:var(--bg);border:0.5px solid var(--bdr2);border-radius:var(--rad);z-index:200;box-shadow:0 4px 12px rgba(0,0,0,.15)">
+            <div style="padding:6px 8px;border-bottom:0.5px solid var(--bdr)">
+              <input type="text" id="ag-fi-search" placeholder="Buscar obligación..." oninput="filtrarListaImp()" style="width:100%;font-size:12px" onclick="event.stopPropagation()">
+            </div>
+            <div style="padding:4px 8px;border-bottom:0.5px solid var(--bdr);display:flex;gap:8px">
+              <span style="font-size:11px;color:var(--green);cursor:pointer" onclick="selTodosImpAg(true)">Seleccionar todos</span>
+              <span style="font-size:11px;color:var(--txt2)">·</span>
+              <span style="font-size:11px;color:var(--txt2);cursor:pointer" onclick="selTodosImpAg(false)">Limpiar</span>
+            </div>
+            <div id="ag-imp-lista" style="max-height:200px;overflow-y:auto"></div>
+          </div>
+        </div>
+      </div>
+      <div class="fg">
+        <label>Período</label>
+        <input type="text" id="ag-per" placeholder="Ej: 05/2026" oninput="rAg()" style="max-width:120px">
+      </div>
+      <div class="fg">
+        <label>Importe</label>
+        <select id="ag-imp-fil" onchange="rAg()">
+          <option value="">Todos</option>
+          <option value="sin">Sin importe</option>
+          <option value="con">Con importe</option>
+        </select>
+      </div>
+      <div style="display:flex;align-items:flex-end;gap:8px">
+        <button class="btn bsm" onclick="limpiarFiltrosAg()" title="Limpiar filtros"><i class="ti ti-x"></i> Limpiar</button>
+        <button class="btn bsm" onclick="genRec()"><i class="ti ti-brand-whatsapp"></i> Recordatorios</button>
+      </div>
+    </div>
+    <div style="margin-top:8px;font-size:11px;color:var(--txt2)" id="ag-tot"></div>
   </div>
   <div id="ag-cont"></div>
 </div>
@@ -257,7 +318,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--green)}
           <th style="width:36px"><input type="checkbox" id="pag-all" onchange="selAllPagos(this.checked)" style="width:auto;cursor:pointer"></th>
           <th>Fecha recibo</th>
           <th>Cliente</th>
-          <th>Período</th>
+          <th>Período oblig.</th>
           <th>Obligación</th>
           <th>Tipo</th>
           <th style="text-align:right">Importe</th>
@@ -396,6 +457,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--green)}
     </div>
     <div class="fg fgf"><label>Email</label><input id="c-e" type="email" placeholder="cliente@mail.com"></div>
     <div class="fg fgf"><label>WhatsApp (sin 0 ni 15)</label><input id="c-w" type="text" placeholder="Ej: 3456123456"></div>
+    <div class="fg fgf"><label>Nombre para saludo <span style="font-weight:400;color:var(--txt2)">(aparece en el recordatorio de WhatsApp)</span></label><input id="c-sal" type="text" placeholder="Ej: Laura"></div>
     <div class="fg fgf"><label>Obligaciones asignadas</label><div class="igrid" id="ci-chk"></div></div>
   </div>
   <div class="ma"><button class="btn" onclick="cm('mo-cli')">Cancelar</button><button class="btn btnp" onclick="saveCli()">Guardar cliente</button></div>
@@ -468,9 +530,19 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--green)}
 
 
 <div class="overlay" id="mo-recs">
-<div class="modal" style="max-width:620px">
-  <div class="mt"><span id="recs-t">Recordatorios del mes</span><button class="btn bsm" onclick="cm('mo-recs')"><i class="ti ti-x"></i></button></div>
-  <div id="recs-c" style="max-height:60vh;overflow-y:auto"></div>
+<div class="modal" style="max-width:660px">
+  <div class="mt">
+    <span id="recs-t">Recordatorios del mes</span>
+    <button class="btn bsm" onclick="cm('mo-recs')"><i class="ti ti-x"></i></button>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap;padding-bottom:10px;border-bottom:0.5px solid var(--bdr)">
+    <button class="btn bsm" onclick="selAllRecs(true)"><i class="ti ti-checkbox"></i> Seleccionar todos</button>
+    <button class="btn bsm" onclick="selAllRecs(false)">Deseleccionar</button>
+    <button class="btn bsm" style="color:var(--txt2)" onclick="filtrarNoEnviados()"><i class="ti ti-filter"></i> Solo no enviados</button>
+    <button class="btn btnp bsm" onclick="enviarSiguiente()"><i class="ti ti-brand-whatsapp"></i> Enviar seleccionados</button>
+    <span id="recs-estado" style="font-size:11px;color:var(--txt2)"></span>
+  </div>
+  <div id="recs-c" style="max-height:55vh;overflow-y:auto"></div>
   <div class="ma"><button class="btn" onclick="cm('mo-recs')">Cerrar</button></div>
 </div></div>
 
@@ -541,7 +613,7 @@ const DEF_IMPS=[
   {id:'SIRADIG',abrev:'SIRADIG',desc:'SIRADIG',tipo:'manual',fuente:'ARCA'},
 ];
 
-const DEF_CLIS=[{"id":"c1","nom":"ACEVEDO CINTIA","cuit":"27-39841066-7","iva":"Monotributista","email":"ciinacevedo76@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c2","nom":"ACOSTA CARINA","cuit":"23-30903326-4","iva":"Monotributista","email":"","wsp":"","imps":[]},{"id":"c3","nom":"AGTERBERG ANYELEN","cuit":"27-36389167-0","iva":"Monotributista","email":"an_kuqui15@hotmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c4","nom":"ALMEIDA MARCOS RENE","cuit":"20-18241900-2","iva":"Monotributista","email":"almeydamarcos056@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c5","nom":"ALVEZ YAMILA BEATRIZ","cuit":"27-43701429-4","iva":"Monotributista","email":"yamialvez9@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c6","nom":"ANTUNEZ JESICA","cuit":"27-34015151-3","iva":"Monotributista","email":"antunezjesica@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c7","nom":"AVALOS JOSE ALEJANDRO","cuit":"20-39189411-7","iva":"Monotributista","email":"copeapi@hotmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c8","nom":"BARCELOS ANTONELLA","cuit":"27-37079863-5","iva":"Monotributista","email":"annto.barcelos@hotmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c9","nom":"BARRETO, ALEJANDRO ANDRÉS","cuit":"20-35716321-9","iva":"Monotributista","email":"barreto.alejandro.andres@gmail.com","wsp":"","imps":["MONOT.","PL.ERIOS","SER.DOM.OBL."]},{"id":"c10","nom":"BARRETO, CAROLINA PAULA","cuit":"27-22246248-2","iva":"Monotributista","email":"","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c11","nom":"BARRETO, MATIAS SEBASTIAN","cuit":"20-42263926-9","iva":"Monotributista","email":"matibarreto_1999@hotmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c12","nom":"BARRIOS CAMILA","cuit":"27-41630520-5","iva":"Monotributista","email":"cami2025.cb@gmail.com","wsp":"","imps":[]},{"id":"c13","nom":"BARTH, GISELA LORENA","cuit":"27-40161251-9","iva":"Monotributista","email":"giselabarth97@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c14","nom":"BARTH, GUILLERMO HERNAN","cuit":"20-34678924-8","iva":"Responsable Inscripto","email":"barthvictor70@gmail.com","wsp":"","imps":["HON_PROF_RI","IVA","AUTON.","GAN.PER.FIS.","CONV.MULT.DJ","CONV.MULT."]},{"id":"c15","nom":"BENITEZ PAOLA ALEJANDRA","cuit":"27-29079632-1","iva":"Monotributista","email":"paobenitez_29@hotmail.com","wsp":"","imps":[]},{"id":"c16","nom":"BERMANI, MARCOS EXEQUIEL","cuit":"20-40805402-9","iva":"Monotributista","email":"bermanimarcos@gmail.com","wsp":"","imps":[]},{"id":"c17","nom":"BERTA CECILIA","cuit":"27-31758393-7","iva":"Monotributista","email":"mcbcecib@gmail.com","wsp":"","imps":["LEYSOC_FATSA 2","HON_PROF_LABORAL","HON_PROF_MONO","MONOT.","LEYSOC_FATSA 1","PL.ERIOS","931_LSD"]},{"id":"c18","nom":"BIANCARDI MARCELA","cuit":"27-26088729-2","iva":"Monotributista","email":"","wsp":"","imps":[]},{"id":"c19","nom":"BIANCHINI, ANGEL MATIAS","cuit":"23-28196134-9","iva":"Monotributista","email":"bunkergrafica@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c20","nom":"BORDON, JOSE MANUEL","cuit":"20-37563199-8","iva":"Responsable Inscripto","email":"anisaindumentariainfantil@gmail.com","wsp":"","imps":["HON_PROF_RI","AUTON.","IVA","GAN.PER.FIS.","TASA CHAJARI","CONV.MULT.DJ","CONV.MULT."]},{"id":"c21","nom":"BRARDA, MARIA ROSA","cuit":"27-14104106-7","iva":"Monotributista","email":"institutomaryschool@gmail.com","wsp":"","imps":["TASA_CHA_URQ","HON_PROF_MONO","MONOT.","TASA_CHA_RIV"]},{"id":"c22","nom":"BRUTOMESO MARIA LAURA","cuit":"27-33927642-6","iva":"Monotributista","email":"cediac2020@gmail.com","wsp":"","imps":["LEYSOC_FATSA 2","HON_PROF_LABORAL","HON_PROF_MONO","MONOT.","LEYSOC_FATSA 1","PL.ERIOS","931_LSD"]},{"id":"c23","nom":"BRUTOMEZO GUILLERMO ELIAS","cuit":"20-34015024-5","iva":"Monotributista","email":"laboratoriobrutomezo@hotmail.com","wsp":"","imps":["PL.ERIOS","MONOT.","HON_PROF_MONO"]},{"id":"c24","nom":"BUZATTO ROMINA ISOLINA","cuit":"27-29770111-3","iva":"Monotributista","email":"eduzarate2021@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c25","nom":"CACERES DIAZ DIEGO FABIAN","cuit":"20-40752814-0","iva":"Monotributista","email":"diegodino@hotmail.com.ar","wsp":"","imps":[]},{"id":"c26","nom":"CALGARO, YOANA INES","cuit":"27-37587010-5","iva":"Monotributista","email":"yoanacalgaro@hotmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c27","nom":"CARABAJAL, MARTIN ALEJANDRO","cuit":"20-41189162-4","iva":"Monotributista","email":"eledenesteticaybienestar@gmail.com","wsp":"","imps":[]},{"id":"c28","nom":"CARDOZO, LORENA BEATRIZ","cuit":"27-23740995-2","iva":"Monotributista","email":"lorecarleg@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c29","nom":"CAROTTA REMO AGUSTIN","cuit":"20-34006740-2","iva":"Monotributista","email":"agustin.carotta@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","AUTON.","SER.DOM.OBL.","PL.ERIOS"]},{"id":"c30","nom":"CIUCCIO GUSTAVO","cuit":"20-20098611-4","iva":"Monotributista","email":"ciucciogustavo49@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c31","nom":"COSSIGNANI ANTONELLA","cuit":"27-36609222-1","iva":"Monotributista","email":"","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c32","nom":"CROATINI, AGOSTINA","cuit":"27-38388295-3","iva":"Monotributista","email":"agos.croattini@hotmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c33","nom":"DALPRA, ANDREA VIVIANA","cuit":"27-28195988-9","iva":"Monotributista","email":"indriani_1@hotmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c34","nom":"DALPRAT, MARIA ROSA","cuit":"27-23729178-1","iva":"Monotributista","email":"","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c35","nom":"DEGRACIA MARIA PAULA","cuit":"27-44103522-0","iva":"Monotributista","email":"aberturascalvo.admi@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c36","nom":"DI FRANCESCO SOL","cuit":"27-45047473-3","iva":"Monotributista","email":"martinocamporeg@gmail.com","wsp":"","imps":[]},{"id":"c37","nom":"DIAZ SONIA ITATI","cuit":"23-29107401-4","iva":"Monotributista","email":"soniaitatidiaz@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c38","nom":"CHAVEZ DIEGO ALBERTO","cuit":"20-26862871-2","iva":"Monotributista","email":"diego_chavez13@hotmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c39","nom":"DURANTE OMAR NICOLAS","cuit":"20-37563087-8","iva":"Monotributista","email":"URSU_G@HOTMAIL.COM","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c40","nom":"ESCALANTE, MIRTA SUSANA","cuit":"23-20510579-4","iva":"Monotributista","email":"susanaescalante17@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c41","nom":"ESPINDOLA JUAN RAMON","cuit":"20-23028996-5","iva":"Monotributista","email":"ayelenespin@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c42","nom":"ESQUIVEL MARIA FLORENCIA","cuit":"27-38388336-4","iva":"Monotributista","email":"","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c43","nom":"FARIAS, SOLANGE ARACELI","cuit":"27-35297951-7","iva":"Monotributista","email":"","wsp":"","imps":[]},{"id":"c44","nom":"FARINA NOELI ANABEL","cuit":"27-41796357-5","iva":"Monotributista","email":"noelifarina9@gmail.com","wsp":"","imps":[]},{"id":"c45","nom":"FLORES VIVIANA NOEMI","cuit":"27-36607840-7","iva":"Monotributista","email":"viviananoemiflores100292@gmail.com","wsp":"","imps":[]},{"id":"c46","nom":"FRANZOY CRISTIAN","cuit":"23-31091528-9","iva":"Monotributista","email":"cmfranzoy@gmail.com","wsp":"","imps":[]},{"id":"c47","nom":"FRANZOY MARCELO","cuit":"20-31758394-0","iva":"Monotributista","email":"marcefranzoy1@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c48","nom":"GALARZA PABLO MARTIN","cuit":"20-35716412-6","iva":"Monotributista","email":"","wsp":"","imps":[]},{"id":"c49","nom":"GALEANO, MARIANA ELIZABETH","cuit":"27-34015032-0","iva":"Monotributista","email":"marianaelizabethgaleano@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c50","nom":"GARAT ALVARO RAMON","cuit":"23-37079791-9","iva":"Monotributista","email":"alvarogarat2505@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c51","nom":"GARESIO VALENTINO","cuit":"20-46916227-4","iva":"Monotributista","email":"valentinogaresio2005@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c52","nom":"GIMENEZ GASTON EZEQUIEL","cuit":"20-38054630-3","iva":"Monotributista","email":"C.sgimenezgaston@hotmail.com","wsp":"","imps":[]},{"id":"c53","nom":"GONZALEZ GRACIELA","cuit":"27-25205296-3","iva":"Monotributista","email":"graciela123peluqueria@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c54","nom":"GRAZIANO URSULA","cuit":"27-31569650-5","iva":"Monotributista","email":"ursu_g@hotmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c55","nom":"GRUPO SENDROS HERMANOS SRL","cuit":"30-71629774-4","iva":"Responsable Inscripto","email":"","wsp":"","imps":["HON_PROF_RI","HON_PROF_LABORAL","PYME_ACC.PART.SOC.","IVA","LEYSOC_MOS-SEG","TASA CHAJARI","LEYSOC_MOS-SIND","CONV.MULT.","CONV.MULT.DJ","931_LSD"]},{"id":"c56","nom":"GUIANO MARIA JOSE","cuit":"27-35445393-8","iva":"Monotributista","email":"","wsp":"","imps":["HON_PROF_MONO"]},{"id":"c57","nom":"IMPULSA SAS","cuit":"30-71897174-4","iva":"Responsable Inscripto","email":"aberturascalvo.admi@gmail.com","wsp":"","imps":["IB.LOC.ERIOS","INACAP","HON_PROF_LABORAL","HON_PROF_RI","PYME_ACC.PART.SOC.","IVA","ESTRELLA","LEYSOC_OSECC","INF.FISC","TASA CHAJARI","LEYSOC_CEC_CHA","FAECYS","931_LSD"]},{"id":"c58","nom":"KRUNFLY, YAMILA ANAHI","cuit":"27-28590171-0","iva":"Monotributista","email":"yamilakrunfli@hotmail.com","wsp":"","imps":["PL.ERIOS","MONOT.","HON_PROF_MONO","SER.DOM.OBL."]},{"id":"c59","nom":"LANARO ANALIA NOEMI","cuit":"27-21389676-3","iva":"Monotributista","email":"lanaroanalianoemi@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c60","nom":"LANER FATIMA MARIA AGUSTINA","cuit":"23-39028641-4","iva":"Monotributista","email":"aguslaner@icloud.com","wsp":"","imps":[]},{"id":"c61","nom":"LASCIALANDA GERARDO","cuit":"20-29932646-3","iva":"Monotributista","email":"gerardolascialanda@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c62","nom":"LEITES BRIAN ARIEL","cuit":"20-40406110-1","iva":"Monotributista","email":"brianleites24@gmail.com","wsp":"","imps":["IB.LOC.ERIOS","INACAP","HON_PROF_RI","HON_PROF_LABORAL","IVA","ESTRELLA","AUTON.","LEYSOC_OSECC","GAN.PER.FIS.","TASA CHAJARI","LEYSOC_CEC_CHA","FAECYS","931_LSD"]},{"id":"c63","nom":"LEITES HECTOR EMMANUEL","cuit":"20-31837298-6","iva":"Monotributista","email":"emmalei81@hotmail.com","wsp":"","imps":[]},{"id":"c64","nom":"LEITES ROMINA","cuit":"27-28537549-0","iva":"Monotributista","email":"rominaleites72@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c65","nom":"LEONARDELLI AMADA AURORA","cuit":"27-16337970-3","iva":"Monotributista","email":"barthvictor70@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c66","nom":"LEREIS MARIA SOL","cuit":"27-40406331-1","iva":"Monotributista","email":"sollereis@gmail.com","wsp":"","imps":[]},{"id":"c67","nom":"LEYES JULIAN EMILIANO","cuit":"20-39841077-8","iva":"Monotributista","email":"leyesjulian39@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c68","nom":"LORENZATTO MARCOS SEBASTIAN","cuit":"20-41979701-5","iva":"Monotributista","email":"marcoslorenzatto99@gmail.com","wsp":"","imps":[]},{"id":"c69","nom":"LOSCO GUSTAVO","cuit":"20-14730290-9","iva":"Monotributista","email":"","wsp":"","imps":["MONOT."]},{"id":"c70","nom":"LOSCO MARIA JOSE","cuit":"27-31569552-5","iva":"Monotributista","email":"","wsp":"","imps":[]},{"id":"c71","nom":"LUNA FERNANDA SOLEDAD","cuit":"27-35350124-6","iva":"Monotributista","email":"martinocamporeg@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c72","nom":"MACHADO, MARIA FLORENCIA","cuit":"27-34015295-1","iva":"Monotributista","email":"florenciamachado.rentals@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c73","nom":"MARCHESINI ROCIO BELEN","cuit":"27-35445383-0","iva":"Monotributista","email":"rociomarchesini27@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c74","nom":"MARTINEZ HUGO DANIEL JESUS","cuit":"20-32505172-9","iva":"Responsable Inscripto","email":"huguitomartinezautomotores@gmail.com","wsp":"","imps":["AUTON.","GAN.PER.FIS.","HON_PROF_RI","IB.LOC.ERIOS","IVA"]},{"id":"c75","nom":"MARZORATTI ALEJANDRO DANIEL","cuit":"20-37079523-2","iva":"Responsable Inscripto","email":"alejandromarzoratti5@gmail.com","wsp":"","imps":["IB.LOC.ERIOS","HON_PROF_RI","IVA","AUTON.","GAN.PER.FIS."]},{"id":"c76","nom":"MARZORATTI, GISELA","cuit":"27-30429360-3","iva":"Monotributista","email":"gisu_marzo@hotmail.com","wsp":"","imps":[]},{"id":"c77","nom":"MASETTO YANINA MARCELA","cuit":"27-31118235-3","iva":"Monotributista","email":"eparts.admi@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c78","nom":"MEDINA, NORBERTO","cuit":"20-17937242-9","iva":"Responsable Inscripto","email":"copeapi@hotmail.com","wsp":"","imps":["IB.LOC.ERIOS","HON_PROF_RI","IVA","AUTON.","GAN.PER.FIS."]},{"id":"c79","nom":"MENSINGUER GONZALO DAVID","cuit":"20-31677869-1","iva":"Responsable Inscripto","email":"mensinguergd@gmail.com","wsp":"","imps":["IB.LOC.ERIOS","HON_PROF_RI","IVA","AUTON.","GAN.PER.FIS.","TASA CONCORDIA"]},{"id":"c80","nom":"MEZA MARIO JAVIER","cuit":"20-30788645-7","iva":"Monotributista","email":"","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c81","nom":"MILANICH, SANTIAGO","cuit":"20-39256135-9","iva":"Monotributista","email":"santiagomilanich@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c82","nom":"MIÑO MILAGROS","cuit":"27-41630559-0","iva":"Monotributista","email":"milagros.mino.99@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c83","nom":"MOREIRA IVAN","cuit":"20-28196305-9","iva":"Monotributista","email":"iem28@hotmail.com","wsp":"","imps":[]},{"id":"c84","nom":"NONINO CAROLINA ROSA","cuit":"27-38388555-3","iva":"Monotributista","email":"caritononino12@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c85","nom":"OCAMPO LEONARDO MARTIN","cuit":"20-37026509-8","iva":"Responsable Inscripto","email":"martinocamporeg@gmail.com","wsp":"","imps":["IB.LOC.ERIOS","HON_PROF_RI","IVA","AUTON.","GAN.PER.FIS.","TASA CHAJARI"]},{"id":"c86","nom":"OJEDA SONIA","cuit":"27-27443378-2","iva":"Monotributista","email":"soniaannaluz@gmail.com","wsp":"","imps":[]},{"id":"c87","nom":"ORCELLET, MARIA MABEL","cuit":"27-33941382-2","iva":"Monotributista","email":"orcelletmabel@gmail.com","wsp":"","imps":["PL.ERIOS","MONOT."]},{"id":"c88","nom":"ORLOFF MAGDALENA","cuit":"27-32395835-7","iva":"Monotributista","email":"","wsp":"","imps":[]},{"id":"c89","nom":"PADRON JULIANA","cuit":"27-38770578-9","iva":"Monotributista","email":"juliana.padron16@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c90","nom":"PALACIO, JUAN ERNESTO (HIJO)","cuit":"20-42602439-0","iva":"Monotributista","email":"","wsp":"","imps":["TASA_CHA_HELA","HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c91","nom":"PELIQUERO ABELARDO VICENTE","cuit":"20-16173839-6","iva":"Monotributista","email":"angelicadalmaso2017@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c92","nom":"PELIQUERO CARINA","cuit":"27-22881331-7","iva":"Monotributista","email":"peliquerocarina@gmail.com","wsp":"","imps":[]},{"id":"c93","nom":"PENAYO AMAYA, JESÚS DAVID A.","cuit":"20-28650191-6","iva":"Monotributista","email":"jesuspenayoamaya@gmail.com","wsp":"","imps":["HON_PROF_LAB_CP","SIRADIG","SER.DOM.OBL."]},{"id":"c94","nom":"PENONI ANDREA","cuit":"27-26203724-5","iva":"Monotributista","email":"andrea_iam33@hotmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c95","nom":"PEÑALOZA SANTIAGO","cuit":"20-35129531-8","iva":"Monotributista","email":"santiagope18@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c96","nom":"PEREIRA NIDIA DEL CARMEN","cuit":"27-17201605-2","iva":"Monotributista","email":"nidiacolito07@gmail.com","wsp":"","imps":[]},{"id":"c97","nom":"PEREZ CLAUDIA","cuit":"27-24281743-0","iva":"Monotributista","email":"perezclau1999.cb@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c98","nom":"PEZZELATTO GUILLERMO","cuit":"20-35222670-0","iva":"Monotributista","email":"pezzelattoguillermod@hotmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c99","nom":"PEZZELATTO SOLEDAD ELIZABETH","cuit":"27-23729254-0","iva":"Monotributista","email":"pezzelattosoledad@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c100","nom":"PIZZIO JONATAN RAUL","cuit":"20-37975464-4","iva":"Monotributista","email":"jonapizzio@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c101","nom":"POSADAS GUSTAVO ALEJANDRO","cuit":"20-30410844-5","iva":"Monotributista","email":"","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c102","nom":"QUIROZ, ADRIANA","cuit":"27-33483693-8","iva":"Monotributista","email":"mauricio.Stivanello@almundofr.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c103","nom":"QUIROZ, JORGELINA ANDREA","cuit":"27-37064160-4","iva":"Monotributista","email":"hakunamatataeventos23@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c104","nom":"RAMIREZ OSCAR ANDRES","cuit":"20-43294360-8","iva":"Monotributista","email":"gerardolascialanda@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c105","nom":"RIVERO, AGUSTIN R.","cuit":"20-38388214-2","iva":"Monotributista","email":"nitsuga3456@gmail.com","wsp":"","imps":["TASA_CHA_MLIC","TASA_CHA_PELU","HON_PROF_MONO","MONOT."]},{"id":"c106","nom":"ROA LUANA JEANETT","cuit":"27-40257956-6","iva":"Monotributista","email":"roaluanaa79@hotmail.com","wsp":"","imps":[]},{"id":"c107","nom":"RODRIGUEZ MATIAS ANGEL GABRIEL","cuit":"20-41231114-1","iva":"Monotributista","email":"gerardolascialanda@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c108","nom":"ROLDAN ELIAS DANIEL","cuit":"20-35725467-2","iva":"Responsable Inscripto","email":"martinocamporeg@gmail.com","wsp":"","imps":["IB.LOC.ERIOS","HON_PROF_RI","IVA","AUTON.","GAN.PER.FIS."]},{"id":"c109","nom":"ROMERO, BRUNO ALBERTO","cuit":"20-39256180-4","iva":"Monotributista","email":"bruromero6@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c110","nom":"RUIZ DIAZ MARIA MANUELA","cuit":"27-31569613-0","iva":"Monotributista","email":"rodrigosendros@gmail.com","wsp":"","imps":["MONOT."]},{"id":"c111","nom":"RUIZ DIAZ, MARIA VICTORIA","cuit":"27-32505196-0","iva":"Monotributista","email":"rodrigosendros@gmail.com","wsp":"","imps":["MONOT."]},{"id":"c112","nom":"RUIZ DIAZ, SERGIO DAVID","cuit":"20-40161644-7","iva":"Monotributista","email":"davidruizdiaz9i@gmail.com","wsp":"","imps":["IB.LOC.ERIOS","HON_PROF_RI","IVA","AUTON.","GAN.PER.FIS."]},{"id":"c113","nom":"RUIZ DIAZ, WALTER ABEL","cuit":"20-31537123-7","iva":"Monotributista","email":"walter_ruizdiaz1@hotmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c114","nom":"SAMPAYO GUADALUPE","cuit":"27-32087617-1","iva":"Monotributista","email":"guadalupesampayo0@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c115","nom":"SANCHEZ IRMA NOEMI","cuit":"23-30719780-4","iva":"Monotributista","email":"noemisanchez667@yahoo.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c116","nom":"SANCHEZ JOHANA CECILIA","cuit":"27-37545869-7","iva":"Monotributista","email":"","wsp":"","imps":[]},{"id":"c117","nom":"SEGALA, MARIA AGUSTINA","cuit":"27-35716114-8","iva":"Monotributista","email":"agustinasegala@gmail.com","wsp":"","imps":["PL.ERIOS","HON_PROF_MONO","MONOT."]},{"id":"c118","nom":"SENDROS, MAXIMILIANO","cuit":"23-30691273-9","iva":"Monotributista","email":"rodrigosendros@gmail.com","wsp":"","imps":["TASA CONCORDIA","MONOT."]},{"id":"c119","nom":"SENDROS, RODRIGO ROBERTO","cuit":"20-32087671-1","iva":"Responsable Inscripto","email":"rodrigosendros@gmail.com","wsp":"","imps":["INACAP","HON_PROF_RI","HON_PROF_LABORAL","IVA","AUTON.","ESTRELLA","LEYSOC_OSECC","GAN.PER.FIS.","TASA CHAJARI","LEYSOC_CEC_CHA","CONV.MULT.","CONV.MULT.DJ","FAECYS","931_LSD"]},{"id":"c120","nom":"SILVESTRI LUCIANA","cuit":"27-30788818-7","iva":"Monotributista","email":"lucianasilvestri12@gmail.com","wsp":"","imps":["TASA_CHA_SAR","HON_PROF_MONO","MONOT.","TASA_CHA_9DEJ","TASA_CHA_SFE","TASA_CHA_1DEM"]},{"id":"c121","nom":"SOSA ALBARRACIN MARCELO ANDRES","cuit":"20-94813197-9","iva":"Monotributista","email":"elianapampillo176@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c122","nom":"SOSA ELSA BEATRIZ","cuit":"23-29005178-9","iva":"Monotributista","email":"beatrizcrack@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c123","nom":"STIVANELLO, MAURICIO","cuit":"20-35129606-3","iva":"Responsable Inscripto","email":"mauricio.stivanello@almundofr.com","wsp":"","imps":["IB.LOC.ERIOS","HON_PROF_LABORAL","HON_PROF_RI","AUTON.","IVA","LEYSOC_OSECC","GAN.PER.FIS.","LEYSOC_INCATUR","TASA CHAJARI","LEYSOC_CEC_CHA","LEYSOC_CEC_CON","TASA CONCORDIA","FAECYS","931_LSD"]},{"id":"c124","nom":"SUAREZ LUIS ALBERTO","cuit":"20-40161327-8","iva":"Monotributista","email":"luissuarez.serviciospap@gmail.com","wsp":"","imps":[]},{"id":"c125","nom":"TABENI MARIA FERNANDA","cuit":"27-31118116-0","iva":"Monotributista","email":"fernandatab@gmail.com","wsp":"","imps":["PL.ERIOS","MONOT.","HON_PROF_MONO"]},{"id":"c126","nom":"TABENI MARIA INES","cuit":"27-32505165-0","iva":"Monotributista","email":"enriqueta.ropita@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c127","nom":"TOLLER FRANCO CEFERINO","cuit":"20-44283479-3","iva":"Monotributista","email":"franco17toller@gmail.com","wsp":"","imps":[]},{"id":"c128","nom":"TOLLER LUCAS","cuit":"20-37152485-2","iva":"Responsable Inscripto","email":"lucastolller@gmail.com","wsp":"","imps":[]},{"id":"c129","nom":"TONINA MARIANO","cuit":"20-38388249-5","iva":"Monotributista","email":"marianotonina0919@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c130","nom":"TORRES EDUARDO JAVIER","cuit":"23-32184547-9","iva":"Monotributista","email":"vidaltanner@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c131","nom":"TOSI, LIDIA MARÍA EUGENIA","cuit":"27-28333412-6","iva":"Monotributista","email":"jesuspenayoamaya@gmail.com","wsp":"","imps":["PL.ERIOS","HON_PROF_MONO","MONOT."]},{"id":"c132","nom":"UBEDA JUDITH MAGALI","cuit":"23-43113946-4","iva":"Monotributista","email":"anisaindumentariainfantil@gmail.com","wsp":"","imps":[]},{"id":"c133","nom":"VARGAS MARIA MARCELA","cuit":"27-22496392-6","iva":"Monotributista","email":"","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c134","nom":"VEGA, ROXANA","cuit":"23-24487590-4","iva":"Monotributista","email":"vegaroxana768@gmail.com","wsp":"","imps":[]},{"id":"c135","nom":"VERONI EVELINA","cuit":"27-20527324-2","iva":"Monotributista","email":"evelinaveroni@hotmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","SER.DOM.OBL.","TASA_FED_25DEM","PL.ERIOS","TASA_FED_BEL"]},{"id":"c136","nom":"VILLANUEVA, HUGO ROBERTO","cuit":"23-11810345-9","iva":"Responsable Inscripto","email":"hugorobertovillanueva@hotmail.com","wsp":"","imps":["IB.LOC.ERIOS","HON_PROF_RI","SER.DOM.OBL.","IVA","AUTON.","GAN.PER.FIS."]},{"id":"c137","nom":"WALINGRE NESTOR RENE","cuit":"20-16820261-0","iva":"Monotributista","email":"nere_2721@hotmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c138","nom":"WALINGRE, SOFIA","cuit":"27-36646273-8","iva":"Monotributista","email":"sofiawalingre@gmail.com","wsp":"","imps":[]},{"id":"c139","nom":"YAÑEZ CESAR","cuit":"20-33825929-9","iva":"Monotributista","email":"cesar.yanez.mmo@gmail.com","wsp":"","imps":[]},{"id":"c140","nom":"ZAMPEDRI GUILLERMO SEBASTIAN","cuit":"20-32505207-5","iva":"Monotributista","email":"zampedriguillermosebastian@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c141","nom":"ZANETTI, DANIEL ALBERTO","cuit":"20-20667515-3","iva":"Monotributista","email":"ernesto_zanetti@hotmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c142","nom":"ZANETTI, ERNESTO RAMON","cuit":"20-12337618-9","iva":"Monotributista","email":"ernesto_zanetti@hotmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c143","nom":"ZANETTI, VALERIA ALEJANDRA","cuit":"27-35716072-9","iva":"Monotributista","email":"valeria.zanetti22@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c144","nom":"ZAUPA CLARISA BEATRIZ","cuit":"27-23210386-3","iva":"Monotributista","email":"gisu_marzo@hotmail.com","wsp":"","imps":[]},{"id":"c145","nom":"ZILONI SERGIO RUBEN","cuit":"20-27337518-0","iva":"Monotributista","email":"sergio_ziloni@hotmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c146","nom":"HERZ SANDRO MANUEL","cuit":"20-31122738-7","iva":"Monotributista","email":"raquelcampedo@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c147","nom":"GONZALEZ ROXANA LAURA","cuit":"27-22841605-9","iva":"Monotributista","email":"roxi.1272@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c148","nom":"CALVO AGUSTIN","cuit":"20-43633540-8","iva":"Responsable Inscripto","email":"","wsp":"","imps":["IB.LOC.ERIOS","HON_PROF_LABORAL","HON_PROF_RI","LEYSOC_GAS_2","LEYSOC_GAS_1","AUTON.","IVA","GAN.PER.FIS.","TASA CHAJARI","LEYSOC_GAS_3","931_LSD"]},{"id":"c149","nom":"FERNANDEZ MARIA JOSE","cuit":"23-37586525-4","iva":"Monotributista","email":"","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c150","nom":"LIMA ROCIO SOLEDAD","cuit":"27-35464915-8","iva":"Monotributista","email":"limarocio@hotmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c151","nom":"SOSA AGUSTIN FRANCISCO","cuit":"20-37975350-8","iva":"Monotributista","email":"agustinsosa323@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c152","nom":"BLOCK GABRIEL ALEXIS","cuit":"20-34679152-8","iva":"Monotributista","email":"iturbef1@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c153","nom":"OJEDA HERNAN GABRIEL","cuit":"20-39195734-8","iva":"Monotributista","email":"larafavit14@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c154","nom":"BENITEZ JESICA VANESA","cuit":"27-33216328-6","iva":"Monotributista","email":"jesi59@outlook.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c155","nom":"WAISPROT AXEL LAUTARIO","cuit":"20-41630568-5","iva":"Monotributista","email":"","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c156","nom":"GONZALEZ MARTA RAQUEL","cuit":"27-21621027-7","iva":"Monotributista","email":"","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c157","nom":"GODOY JOSE MARIA","cuit":"23-26203800-9","iva":"Monotributista","email":"godoyjosemaria234@gmail.com","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c158","nom":"DALMASO NICOLAS ALEJANDRO","cuit":"20-37975674-4","iva":"Monotributista","email":"","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c159","nom":"DIMIER PATRICIA MARINA","cuit":"27-24732634-6","iva":"Monotributista","email":"GESTIONEMPRENDEDORABO@GMAIL.COM","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c160","nom":"AGRUPACION AUTOS DE EPOCA CHAJARI","cuit":"30-71859604-8","iva":"Exento","email":"","wsp":"","imps":["INF.FISC"]},{"id":"c161","nom":"CENTRO SUBOFICIALES SARGENTO CABRAL","cuit":"30-71551571-3","iva":"Exento","email":"","wsp":"","imps":["INF.FISC"]},{"id":"c162","nom":"BURNA ANA MELINA","cuit":"27-41119441-3","iva":"Monotributista","email":"","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c163","nom":"LOPEZ XIMENA ESMERALDA","cuit":"27-41610487-0","iva":"Monotributista","email":"","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c164","nom":"SOTO WALTER DIEGO","cuit":"20-22496088-4","iva":"Monotributista","email":"","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c165","nom":"CALVO LUIS MARIA","cuit":"20-05812395-2","iva":"Consumidor Final","email":"","wsp":"","imps":["HON_PROF_LAB_CP","SER.DOM.OBL."]},{"id":"c166","nom":"LEZCANO LIDIA ELIZABET","cuit":"23-30993078-9","iva":"Monotributista","email":"","wsp":"","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c167","nom":"BENITEZ EMANUEL MATIAS","cuit":"20-39840878-1","iva":"Monotributista","email":"","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c168","nom":"AMARILLO GUSTAVO ALEJANDRO","cuit":"20-22496353-0","iva":"Monotributista","email":"","wsp":"","imps":["HON_PROF_MONO","MONOT."]},{"id":"c169","nom":"AURI MARIA GABRIELA","cuit":"27-28384919-3","iva":"Monotributista","email":"","wsp":"","imps":["PL.ERIOS","HON_PROF_MONO","MONOT."]},{"id":"c170","nom":"GABRIELLI MARIA VERONICA","cuit":"27-22848025-3","iva":"Monotributista","email":"","wsp":"","imps":["HON_PROF_MONO","MONOT."]}];
+const DEF_CLIS=[{"id":"c1","nom":"ACEVEDO CINTIA","cuit":"27-39841066-7","iva":"Monotributista","email":"ciinacevedo76@gmail.com","wsp":"3454946921","saludo":"Cintia","imps":["HON_PROF_MONO","MONOT."]},{"id":"c2","nom":"ACOSTA CARINA","cuit":"23-30903326-4","iva":"Monotributista","email":"","wsp":"3454946921","saludo":"Carina","imps":[]},{"id":"c3","nom":"AGTERBERG ANYELEN","cuit":"27-36389167-0","iva":"Monotributista","email":"an_kuqui15@hotmail.com","wsp":"3454946921","saludo":"Anyelen","imps":["HON_PROF_MONO","MONOT."]},{"id":"c4","nom":"ALMEIDA MARCOS RENE","cuit":"20-18241900-2","iva":"Monotributista","email":"almeydamarcos056@gmail.com","wsp":"3454946921","saludo":"Rene","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c5","nom":"ALVEZ YAMILA BEATRIZ","cuit":"27-43701429-4","iva":"Monotributista","email":"yamialvez9@gmail.com","wsp":"3454946921","saludo":"Beatriz","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c6","nom":"ANTUNEZ JESICA","cuit":"27-34015151-3","iva":"Monotributista","email":"antunezjesica@gmail.com","wsp":"3454946921","saludo":"Jesica","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c7","nom":"AVALOS JOSE ALEJANDRO","cuit":"20-39189411-7","iva":"Monotributista","email":"copeapi@hotmail.com","wsp":"3454946921","saludo":"Alejandro","imps":["HON_PROF_MONO","MONOT."]},{"id":"c8","nom":"BARCELOS ANTONELLA","cuit":"27-37079863-5","iva":"Monotributista","email":"annto.barcelos@hotmail.com","wsp":"3454946921","saludo":"Antonella","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c9","nom":"BARRETO, ALEJANDRO ANDRÉS","cuit":"20-35716321-9","iva":"Monotributista","email":"barreto.alejandro.andres@gmail.com","wsp":"3454946921","saludo":"Andrés","imps":["MONOT.","PL.ERIOS","SER.DOM.OBL."]},{"id":"c10","nom":"BARRETO, CAROLINA PAULA","cuit":"27-22246248-2","iva":"Monotributista","email":"","wsp":"3454946921","saludo":"Paula","imps":["HON_PROF_MONO","MONOT."]},{"id":"c11","nom":"BARRETO, MATIAS SEBASTIAN","cuit":"20-42263926-9","iva":"Monotributista","email":"matibarreto_1999@hotmail.com","wsp":"3454946921","saludo":"Sebastian","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c12","nom":"BARRIOS CAMILA","cuit":"27-41630520-5","iva":"Monotributista","email":"cami2025.cb@gmail.com","wsp":"3454946921","saludo":"Camila","imps":[]},{"id":"c13","nom":"BARTH, GISELA LORENA","cuit":"27-40161251-9","iva":"Monotributista","email":"giselabarth97@gmail.com","wsp":"3454946921","saludo":"Lorena","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c14","nom":"BARTH, GUILLERMO HERNAN","cuit":"20-34678924-8","iva":"Responsable Inscripto","email":"barthvictor70@gmail.com","wsp":"3454946921","saludo":"Hernan","imps":["HON_PROF_RI","IVA","AUTON.","GAN.PER.FIS.","CONV.MULT.DJ","CONV.MULT."]},{"id":"c15","nom":"BENITEZ PAOLA ALEJANDRA","cuit":"27-29079632-1","iva":"Monotributista","email":"paobenitez_29@hotmail.com","wsp":"3454946921","saludo":"Alejandra","imps":[]},{"id":"c16","nom":"BERMANI, MARCOS EXEQUIEL","cuit":"20-40805402-9","iva":"Monotributista","email":"bermanimarcos@gmail.com","wsp":"3454946921","saludo":"Exequiel","imps":[]},{"id":"c17","nom":"BERTA CECILIA","cuit":"27-31758393-7","iva":"Monotributista","email":"mcbcecib@gmail.com","wsp":"3454946921","saludo":"Cecilia","imps":["LEYSOC_FATSA 2","HON_PROF_LABORAL","HON_PROF_MONO","MONOT.","LEYSOC_FATSA 1","PL.ERIOS","931_LSD"]},{"id":"c18","nom":"BIANCARDI MARCELA","cuit":"27-26088729-2","iva":"Monotributista","email":"","wsp":"3454946921","saludo":"Marcela","imps":[]},{"id":"c19","nom":"BIANCHINI, ANGEL MATIAS","cuit":"23-28196134-9","iva":"Monotributista","email":"bunkergrafica@gmail.com","wsp":"3454946921","saludo":"Matias","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c20","nom":"BORDON, JOSE MANUEL","cuit":"20-37563199-8","iva":"Responsable Inscripto","email":"anisaindumentariainfantil@gmail.com","wsp":"3454946921","saludo":"Manuel","imps":["HON_PROF_RI","AUTON.","IVA","GAN.PER.FIS.","TASA CHAJARI","CONV.MULT.DJ","CONV.MULT."]},{"id":"c21","nom":"BRARDA, MARIA ROSA","cuit":"27-14104106-7","iva":"Monotributista","email":"institutomaryschool@gmail.com","wsp":"3454946921","saludo":"Rosa","imps":["TASA_CHA_URQ","HON_PROF_MONO","MONOT.","TASA_CHA_RIV"]},{"id":"c22","nom":"BRUTOMESO MARIA LAURA","cuit":"27-33927642-6","iva":"Monotributista","email":"cediac2020@gmail.com","wsp":"3454946921","saludo":"Laura","imps":["LEYSOC_FATSA 2","HON_PROF_LABORAL","HON_PROF_MONO","MONOT.","LEYSOC_FATSA 1","PL.ERIOS","931_LSD"]},{"id":"c23","nom":"BRUTOMEZO GUILLERMO ELIAS","cuit":"20-34015024-5","iva":"Monotributista","email":"laboratoriobrutomezo@hotmail.com","wsp":"3454946921","saludo":"Elias","imps":["PL.ERIOS","MONOT.","HON_PROF_MONO"]},{"id":"c24","nom":"BUZATTO ROMINA ISOLINA","cuit":"27-29770111-3","iva":"Monotributista","email":"eduzarate2021@gmail.com","wsp":"3454946921","saludo":"Isolina","imps":["HON_PROF_MONO","MONOT."]},{"id":"c25","nom":"CACERES DIAZ DIEGO FABIAN","cuit":"20-40752814-0","iva":"Monotributista","email":"diegodino@hotmail.com.ar","wsp":"3454946921","saludo":"Fabian","imps":[]},{"id":"c26","nom":"CALGARO, YOANA INES","cuit":"27-37587010-5","iva":"Monotributista","email":"yoanacalgaro@hotmail.com","wsp":"3454946921","saludo":"Ines","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c27","nom":"CARABAJAL, MARTIN ALEJANDRO","cuit":"20-41189162-4","iva":"Monotributista","email":"eledenesteticaybienestar@gmail.com","wsp":"3454946921","saludo":"Alejandro","imps":[]},{"id":"c28","nom":"CARDOZO, LORENA BEATRIZ","cuit":"27-23740995-2","iva":"Monotributista","email":"lorecarleg@gmail.com","wsp":"3454946921","saludo":"Beatriz","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c29","nom":"CAROTTA REMO AGUSTIN","cuit":"20-34006740-2","iva":"Monotributista","email":"agustin.carotta@gmail.com","wsp":"3454946921","saludo":"Agustin","imps":["HON_PROF_MONO","MONOT.","AUTON.","SER.DOM.OBL.","PL.ERIOS"]},{"id":"c30","nom":"CIUCCIO GUSTAVO","cuit":"20-20098611-4","iva":"Monotributista","email":"ciucciogustavo49@gmail.com","wsp":"3454946921","saludo":"Gustavo","imps":["HON_PROF_MONO","MONOT."]},{"id":"c31","nom":"COSSIGNANI ANTONELLA","cuit":"27-36609222-1","iva":"Monotributista","email":"","wsp":"3454946921","saludo":"Antonella","imps":["HON_PROF_MONO","MONOT."]},{"id":"c32","nom":"CROATINI, AGOSTINA","cuit":"27-38388295-3","iva":"Monotributista","email":"agos.croattini@hotmail.com","wsp":"3454946921","saludo":"Agostina","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c33","nom":"DALPRA, ANDREA VIVIANA","cuit":"27-28195988-9","iva":"Monotributista","email":"indriani_1@hotmail.com","wsp":"3454946921","saludo":"Viviana","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c34","nom":"DALPRAT, MARIA ROSA","cuit":"27-23729178-1","iva":"Monotributista","email":"","wsp":"3454946921","saludo":"Rosa","imps":["HON_PROF_MONO","MONOT."]},{"id":"c35","nom":"DEGRACIA MARIA PAULA","cuit":"27-44103522-0","iva":"Monotributista","email":"aberturascalvo.admi@gmail.com","wsp":"3454946921","saludo":"Paula","imps":["HON_PROF_MONO","MONOT."]},{"id":"c36","nom":"DI FRANCESCO SOL","cuit":"27-45047473-3","iva":"Monotributista","email":"martinocamporeg@gmail.com","wsp":"3454946921","saludo":"Sol","imps":[]},{"id":"c37","nom":"DIAZ SONIA ITATI","cuit":"23-29107401-4","iva":"Monotributista","email":"soniaitatidiaz@gmail.com","wsp":"3454946921","saludo":"Itati","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c38","nom":"CHAVEZ DIEGO ALBERTO","cuit":"20-26862871-2","iva":"Monotributista","email":"diego_chavez13@hotmail.com","wsp":"3454946921","saludo":"Alberto","imps":["HON_PROF_MONO","MONOT."]},{"id":"c39","nom":"DURANTE OMAR NICOLAS","cuit":"20-37563087-8","iva":"Monotributista","email":"URSU_G@HOTMAIL.COM","wsp":"3454946921","saludo":"Nicolas","imps":["HON_PROF_MONO","MONOT."]},{"id":"c40","nom":"ESCALANTE, MIRTA SUSANA","cuit":"23-20510579-4","iva":"Monotributista","email":"susanaescalante17@gmail.com","wsp":"3454946921","saludo":"Susana","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c41","nom":"ESPINDOLA JUAN RAMON","cuit":"20-23028996-5","iva":"Monotributista","email":"ayelenespin@gmail.com","wsp":"3454946921","saludo":"Ramon","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c42","nom":"ESQUIVEL MARIA FLORENCIA","cuit":"27-38388336-4","iva":"Monotributista","email":"","wsp":"3454946921","saludo":"Florencia","imps":["HON_PROF_MONO","MONOT."]},{"id":"c43","nom":"FARIAS, SOLANGE ARACELI","cuit":"27-35297951-7","iva":"Monotributista","email":"","wsp":"3454946921","saludo":"Araceli","imps":[]},{"id":"c44","nom":"FARINA NOELI ANABEL","cuit":"27-41796357-5","iva":"Monotributista","email":"noelifarina9@gmail.com","wsp":"3454946921","saludo":"Anabel","imps":[]},{"id":"c45","nom":"FLORES VIVIANA NOEMI","cuit":"27-36607840-7","iva":"Monotributista","email":"viviananoemiflores100292@gmail.com","wsp":"3454946921","saludo":"Noemi","imps":[]},{"id":"c46","nom":"FRANZOY CRISTIAN","cuit":"23-31091528-9","iva":"Monotributista","email":"cmfranzoy@gmail.com","wsp":"3454946921","saludo":"Cristian","imps":[]},{"id":"c47","nom":"FRANZOY MARCELO","cuit":"20-31758394-0","iva":"Monotributista","email":"marcefranzoy1@gmail.com","wsp":"3454946921","saludo":"Marcelo","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c48","nom":"GALARZA PABLO MARTIN","cuit":"20-35716412-6","iva":"Monotributista","email":"","wsp":"3454946921","saludo":"Martin","imps":[]},{"id":"c49","nom":"GALEANO, MARIANA ELIZABETH","cuit":"27-34015032-0","iva":"Monotributista","email":"marianaelizabethgaleano@gmail.com","wsp":"3454946921","saludo":"Elizabeth","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c50","nom":"GARAT ALVARO RAMON","cuit":"23-37079791-9","iva":"Monotributista","email":"alvarogarat2505@gmail.com","wsp":"3454946921","saludo":"Ramon","imps":["HON_PROF_MONO","MONOT."]},{"id":"c51","nom":"GARESIO VALENTINO","cuit":"20-46916227-4","iva":"Monotributista","email":"valentinogaresio2005@gmail.com","wsp":"3454946921","saludo":"Valentino","imps":["HON_PROF_MONO","MONOT."]},{"id":"c52","nom":"GIMENEZ GASTON EZEQUIEL","cuit":"20-38054630-3","iva":"Monotributista","email":"C.sgimenezgaston@hotmail.com","wsp":"3454946921","saludo":"Ezequiel","imps":[]},{"id":"c53","nom":"GONZALEZ GRACIELA","cuit":"27-25205296-3","iva":"Monotributista","email":"graciela123peluqueria@gmail.com","wsp":"3454946921","saludo":"Graciela","imps":["HON_PROF_MONO","MONOT."]},{"id":"c54","nom":"GRAZIANO URSULA","cuit":"27-31569650-5","iva":"Monotributista","email":"ursu_g@hotmail.com","wsp":"3454946921","saludo":"Ursula","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c55","nom":"GRUPO SENDROS HERMANOS SRL","cuit":"30-71629774-4","iva":"Responsable Inscripto","email":"","wsp":"3454946921","saludo":"Grupo Sendros Hermanos Srl","imps":["HON_PROF_RI","HON_PROF_LABORAL","PYME_ACC.PART.SOC.","IVA","LEYSOC_MOS-SEG","TASA CHAJARI","LEYSOC_MOS-SIND","CONV.MULT.","CONV.MULT.DJ","931_LSD"]},{"id":"c56","nom":"GUIANO MARIA JOSE","cuit":"27-35445393-8","iva":"Monotributista","email":"","wsp":"3454946921","saludo":"Jose","imps":["HON_PROF_MONO"]},{"id":"c57","nom":"IMPULSA SAS","cuit":"30-71897174-4","iva":"Responsable Inscripto","email":"aberturascalvo.admi@gmail.com","wsp":"3454946921","saludo":"Impulsa Sas","imps":["IB.LOC.ERIOS","INACAP","HON_PROF_LABORAL","HON_PROF_RI","PYME_ACC.PART.SOC.","IVA","ESTRELLA","LEYSOC_OSECC","INF.FISC","TASA CHAJARI","LEYSOC_CEC_CHA","FAECYS","931_LSD"]},{"id":"c58","nom":"KRUNFLY, YAMILA ANAHI","cuit":"27-28590171-0","iva":"Monotributista","email":"yamilakrunfli@hotmail.com","wsp":"3454946921","saludo":"Anahi","imps":["PL.ERIOS","MONOT.","HON_PROF_MONO","SER.DOM.OBL."]},{"id":"c59","nom":"LANARO ANALIA NOEMI","cuit":"27-21389676-3","iva":"Monotributista","email":"lanaroanalianoemi@gmail.com","wsp":"3454946921","saludo":"Noemi","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c60","nom":"LANER FATIMA MARIA AGUSTINA","cuit":"23-39028641-4","iva":"Monotributista","email":"aguslaner@icloud.com","wsp":"3454946921","saludo":"Agustina","imps":[]},{"id":"c61","nom":"LASCIALANDA GERARDO","cuit":"20-29932646-3","iva":"Monotributista","email":"gerardolascialanda@gmail.com","wsp":"3454946921","saludo":"Gerardo","imps":["HON_PROF_MONO","MONOT."]},{"id":"c62","nom":"LEITES BRIAN ARIEL","cuit":"20-40406110-1","iva":"Monotributista","email":"brianleites24@gmail.com","wsp":"3454946921","saludo":"Ariel","imps":["IB.LOC.ERIOS","INACAP","HON_PROF_RI","HON_PROF_LABORAL","IVA","ESTRELLA","AUTON.","LEYSOC_OSECC","GAN.PER.FIS.","TASA CHAJARI","LEYSOC_CEC_CHA","FAECYS","931_LSD"]},{"id":"c63","nom":"LEITES HECTOR EMMANUEL","cuit":"20-31837298-6","iva":"Monotributista","email":"emmalei81@hotmail.com","wsp":"3454946921","saludo":"Emmanuel","imps":[]},{"id":"c64","nom":"LEITES ROMINA","cuit":"27-28537549-0","iva":"Monotributista","email":"rominaleites72@gmail.com","wsp":"3454946921","saludo":"Romina","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c65","nom":"LEONARDELLI AMADA AURORA","cuit":"27-16337970-3","iva":"Monotributista","email":"barthvictor70@gmail.com","wsp":"3454946921","saludo":"Aurora","imps":["HON_PROF_MONO","MONOT."]},{"id":"c66","nom":"LEREIS MARIA SOL","cuit":"27-40406331-1","iva":"Monotributista","email":"sollereis@gmail.com","wsp":"3454946921","saludo":"Sol","imps":[]},{"id":"c67","nom":"LEYES JULIAN EMILIANO","cuit":"20-39841077-8","iva":"Monotributista","email":"leyesjulian39@gmail.com","wsp":"3454946921","saludo":"Emiliano","imps":["HON_PROF_MONO","MONOT."]},{"id":"c68","nom":"LORENZATTO MARCOS SEBASTIAN","cuit":"20-41979701-5","iva":"Monotributista","email":"marcoslorenzatto99@gmail.com","wsp":"3454946921","saludo":"Sebastian","imps":[]},{"id":"c69","nom":"LOSCO GUSTAVO","cuit":"20-14730290-9","iva":"Monotributista","email":"","wsp":"3454946921","saludo":"Gustavo","imps":["MONOT."]},{"id":"c70","nom":"LOSCO MARIA JOSE","cuit":"27-31569552-5","iva":"Monotributista","email":"","wsp":"3454946921","saludo":"Jose","imps":[]},{"id":"c71","nom":"LUNA FERNANDA SOLEDAD","cuit":"27-35350124-6","iva":"Monotributista","email":"martinocamporeg@gmail.com","wsp":"3454946921","saludo":"Soledad","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c72","nom":"MACHADO, MARIA FLORENCIA","cuit":"27-34015295-1","iva":"Monotributista","email":"florenciamachado.rentals@gmail.com","wsp":"3454946921","saludo":"Florencia","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c73","nom":"MARCHESINI ROCIO BELEN","cuit":"27-35445383-0","iva":"Monotributista","email":"rociomarchesini27@gmail.com","wsp":"3454946921","saludo":"Belen","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c74","nom":"MARTINEZ HUGO DANIEL JESUS","cuit":"20-32505172-9","iva":"Responsable Inscripto","email":"huguitomartinezautomotores@gmail.com","wsp":"3454946921","saludo":"Jesus","imps":["AUTON.","GAN.PER.FIS.","HON_PROF_RI","IB.LOC.ERIOS","IVA"]},{"id":"c75","nom":"MARZORATTI ALEJANDRO DANIEL","cuit":"20-37079523-2","iva":"Responsable Inscripto","email":"alejandromarzoratti5@gmail.com","wsp":"3454946921","saludo":"Daniel","imps":["IB.LOC.ERIOS","HON_PROF_RI","IVA","AUTON.","GAN.PER.FIS."]},{"id":"c76","nom":"MARZORATTI, GISELA","cuit":"27-30429360-3","iva":"Monotributista","email":"gisu_marzo@hotmail.com","wsp":"3454946921","saludo":"Gisela","imps":[]},{"id":"c77","nom":"MASETTO YANINA MARCELA","cuit":"27-31118235-3","iva":"Monotributista","email":"eparts.admi@gmail.com","wsp":"3454946921","saludo":"Marcela","imps":["HON_PROF_MONO","MONOT."]},{"id":"c78","nom":"MEDINA, NORBERTO","cuit":"20-17937242-9","iva":"Responsable Inscripto","email":"copeapi@hotmail.com","wsp":"3454946921","saludo":"Norberto","imps":["IB.LOC.ERIOS","HON_PROF_RI","IVA","AUTON.","GAN.PER.FIS."]},{"id":"c79","nom":"MENSINGUER GONZALO DAVID","cuit":"20-31677869-1","iva":"Responsable Inscripto","email":"mensinguergd@gmail.com","wsp":"3454946921","saludo":"David","imps":["IB.LOC.ERIOS","HON_PROF_RI","IVA","AUTON.","GAN.PER.FIS.","TASA CONCORDIA"]},{"id":"c80","nom":"MEZA MARIO JAVIER","cuit":"20-30788645-7","iva":"Monotributista","email":"","wsp":"3454946921","saludo":"Javier","imps":["HON_PROF_MONO","MONOT."]},{"id":"c81","nom":"MILANICH, SANTIAGO","cuit":"20-39256135-9","iva":"Monotributista","email":"santiagomilanich@gmail.com","wsp":"3454946921","saludo":"Santiago","imps":["HON_PROF_MONO","MONOT."]},{"id":"c82","nom":"MIÑO MILAGROS","cuit":"27-41630559-0","iva":"Monotributista","email":"milagros.mino.99@gmail.com","wsp":"3454946921","saludo":"Milagros","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c83","nom":"MOREIRA IVAN","cuit":"20-28196305-9","iva":"Monotributista","email":"iem28@hotmail.com","wsp":"3454946921","saludo":"Ivan","imps":[]},{"id":"c84","nom":"NONINO CAROLINA ROSA","cuit":"27-38388555-3","iva":"Monotributista","email":"caritononino12@gmail.com","wsp":"3454946921","saludo":"Rosa","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c85","nom":"OCAMPO LEONARDO MARTIN","cuit":"20-37026509-8","iva":"Responsable Inscripto","email":"martinocamporeg@gmail.com","wsp":"3454946921","saludo":"Martin","imps":["IB.LOC.ERIOS","HON_PROF_RI","IVA","AUTON.","GAN.PER.FIS.","TASA CHAJARI"]},{"id":"c86","nom":"OJEDA SONIA","cuit":"27-27443378-2","iva":"Monotributista","email":"soniaannaluz@gmail.com","wsp":"3454946921","saludo":"Sonia","imps":[]},{"id":"c87","nom":"ORCELLET, MARIA MABEL","cuit":"27-33941382-2","iva":"Monotributista","email":"orcelletmabel@gmail.com","wsp":"3454946921","saludo":"Mabel","imps":["PL.ERIOS","MONOT."]},{"id":"c88","nom":"ORLOFF MAGDALENA","cuit":"27-32395835-7","iva":"Monotributista","email":"","wsp":"3454946921","saludo":"Magdalena","imps":[]},{"id":"c89","nom":"PADRON JULIANA","cuit":"27-38770578-9","iva":"Monotributista","email":"juliana.padron16@gmail.com","wsp":"3454946921","saludo":"Juliana","imps":["HON_PROF_MONO","MONOT."]},{"id":"c90","nom":"PALACIO, JUAN ERNESTO (HIJO)","cuit":"20-42602439-0","iva":"Monotributista","email":"","wsp":"3454946921","saludo":"Ernesto","imps":["TASA_CHA_HELA","HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c91","nom":"PELIQUERO ABELARDO VICENTE","cuit":"20-16173839-6","iva":"Monotributista","email":"angelicadalmaso2017@gmail.com","wsp":"3454946921","saludo":"Vicente","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c92","nom":"PELIQUERO CARINA","cuit":"27-22881331-7","iva":"Monotributista","email":"peliquerocarina@gmail.com","wsp":"3454946921","saludo":"Carina","imps":[]},{"id":"c93","nom":"PENAYO AMAYA, JESÚS DAVID A.","cuit":"20-28650191-6","iva":"Monotributista","email":"jesuspenayoamaya@gmail.com","wsp":"3454946921","saludo":"David","imps":["HON_PROF_LAB_CP","SIRADIG","SER.DOM.OBL."]},{"id":"c94","nom":"PENONI ANDREA","cuit":"27-26203724-5","iva":"Monotributista","email":"andrea_iam33@hotmail.com","wsp":"3454946921","saludo":"Andrea","imps":["HON_PROF_MONO","MONOT."]},{"id":"c95","nom":"PEÑALOZA SANTIAGO","cuit":"20-35129531-8","iva":"Monotributista","email":"santiagope18@gmail.com","wsp":"3454946921","saludo":"Santiago","imps":["HON_PROF_MONO","MONOT."]},{"id":"c96","nom":"PEREIRA NIDIA DEL CARMEN","cuit":"27-17201605-2","iva":"Monotributista","email":"nidiacolito07@gmail.com","wsp":"3454946921","saludo":"Carmen","imps":[]},{"id":"c97","nom":"PEREZ CLAUDIA","cuit":"27-24281743-0","iva":"Monotributista","email":"perezclau1999.cb@gmail.com","wsp":"3454946921","saludo":"Claudia","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c98","nom":"PEZZELATTO GUILLERMO","cuit":"20-35222670-0","iva":"Monotributista","email":"pezzelattoguillermod@hotmail.com","wsp":"3454946921","saludo":"Guillermo","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c99","nom":"PEZZELATTO SOLEDAD ELIZABETH","cuit":"27-23729254-0","iva":"Monotributista","email":"pezzelattosoledad@gmail.com","wsp":"3454946921","saludo":"Elizabeth","imps":["HON_PROF_MONO","MONOT."]},{"id":"c100","nom":"PIZZIO JONATAN RAUL","cuit":"20-37975464-4","iva":"Monotributista","email":"jonapizzio@gmail.com","wsp":"3454946921","saludo":"Raul","imps":["HON_PROF_MONO","MONOT."]},{"id":"c101","nom":"POSADAS GUSTAVO ALEJANDRO","cuit":"20-30410844-5","iva":"Monotributista","email":"","wsp":"3454946921","saludo":"Alejandro","imps":["HON_PROF_MONO","MONOT."]},{"id":"c102","nom":"QUIROZ, ADRIANA","cuit":"27-33483693-8","iva":"Monotributista","email":"mauricio.Stivanello@almundofr.com","wsp":"3454946921","saludo":"Adriana","imps":["HON_PROF_MONO","MONOT."]},{"id":"c103","nom":"QUIROZ, JORGELINA ANDREA","cuit":"27-37064160-4","iva":"Monotributista","email":"hakunamatataeventos23@gmail.com","wsp":"3454946921","saludo":"Andrea","imps":["HON_PROF_MONO","MONOT."]},{"id":"c104","nom":"RAMIREZ OSCAR ANDRES","cuit":"20-43294360-8","iva":"Monotributista","email":"gerardolascialanda@gmail.com","wsp":"3454946921","saludo":"Andres","imps":["HON_PROF_MONO","MONOT."]},{"id":"c105","nom":"RIVERO, AGUSTIN R.","cuit":"20-38388214-2","iva":"Monotributista","email":"nitsuga3456@gmail.com","wsp":"3454946921","saludo":"Agustin","imps":["TASA_CHA_MLIC","TASA_CHA_PELU","HON_PROF_MONO","MONOT."]},{"id":"c106","nom":"ROA LUANA JEANETT","cuit":"27-40257956-6","iva":"Monotributista","email":"roaluanaa79@hotmail.com","wsp":"3454946921","saludo":"Jeanett","imps":[]},{"id":"c107","nom":"RODRIGUEZ MATIAS ANGEL GABRIEL","cuit":"20-41231114-1","iva":"Monotributista","email":"gerardolascialanda@gmail.com","wsp":"3454946921","saludo":"Gabriel","imps":["HON_PROF_MONO","MONOT."]},{"id":"c108","nom":"ROLDAN ELIAS DANIEL","cuit":"20-35725467-2","iva":"Responsable Inscripto","email":"martinocamporeg@gmail.com","wsp":"3454946921","saludo":"Daniel","imps":["IB.LOC.ERIOS","HON_PROF_RI","IVA","AUTON.","GAN.PER.FIS."]},{"id":"c109","nom":"ROMERO, BRUNO ALBERTO","cuit":"20-39256180-4","iva":"Monotributista","email":"bruromero6@gmail.com","wsp":"3454946921","saludo":"Alberto","imps":["HON_PROF_MONO","MONOT."]},{"id":"c110","nom":"RUIZ DIAZ MARIA MANUELA","cuit":"27-31569613-0","iva":"Monotributista","email":"rodrigosendros@gmail.com","wsp":"3454946921","saludo":"Manuela","imps":["MONOT."]},{"id":"c111","nom":"RUIZ DIAZ, MARIA VICTORIA","cuit":"27-32505196-0","iva":"Monotributista","email":"rodrigosendros@gmail.com","wsp":"3454946921","saludo":"Victoria","imps":["MONOT."]},{"id":"c112","nom":"RUIZ DIAZ, SERGIO DAVID","cuit":"20-40161644-7","iva":"Monotributista","email":"davidruizdiaz9i@gmail.com","wsp":"3454946921","saludo":"David","imps":["IB.LOC.ERIOS","HON_PROF_RI","IVA","AUTON.","GAN.PER.FIS."]},{"id":"c113","nom":"RUIZ DIAZ, WALTER ABEL","cuit":"20-31537123-7","iva":"Monotributista","email":"walter_ruizdiaz1@hotmail.com","wsp":"3454946921","saludo":"Abel","imps":["HON_PROF_MONO","MONOT."]},{"id":"c114","nom":"SAMPAYO GUADALUPE","cuit":"27-32087617-1","iva":"Monotributista","email":"guadalupesampayo0@gmail.com","wsp":"3454946921","saludo":"Guadalupe","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c115","nom":"SANCHEZ IRMA NOEMI","cuit":"23-30719780-4","iva":"Monotributista","email":"noemisanchez667@yahoo.com","wsp":"3454946921","saludo":"Noemi","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c116","nom":"SANCHEZ JOHANA CECILIA","cuit":"27-37545869-7","iva":"Monotributista","email":"","wsp":"3454946921","saludo":"Cecilia","imps":[]},{"id":"c117","nom":"SEGALA, MARIA AGUSTINA","cuit":"27-35716114-8","iva":"Monotributista","email":"agustinasegala@gmail.com","wsp":"3454946921","saludo":"Agustina","imps":["PL.ERIOS","HON_PROF_MONO","MONOT."]},{"id":"c118","nom":"SENDROS, MAXIMILIANO","cuit":"23-30691273-9","iva":"Monotributista","email":"rodrigosendros@gmail.com","wsp":"3454946921","saludo":"Maximiliano","imps":["TASA CONCORDIA","MONOT."]},{"id":"c119","nom":"SENDROS, RODRIGO ROBERTO","cuit":"20-32087671-1","iva":"Responsable Inscripto","email":"rodrigosendros@gmail.com","wsp":"3454946921","saludo":"Roberto","imps":["INACAP","HON_PROF_RI","HON_PROF_LABORAL","IVA","AUTON.","ESTRELLA","LEYSOC_OSECC","GAN.PER.FIS.","TASA CHAJARI","LEYSOC_CEC_CHA","CONV.MULT.","CONV.MULT.DJ","FAECYS","931_LSD"]},{"id":"c120","nom":"SILVESTRI LUCIANA","cuit":"27-30788818-7","iva":"Monotributista","email":"lucianasilvestri12@gmail.com","wsp":"3454946921","saludo":"Luciana","imps":["TASA_CHA_SAR","HON_PROF_MONO","MONOT.","TASA_CHA_9DEJ","TASA_CHA_SFE","TASA_CHA_1DEM"]},{"id":"c121","nom":"SOSA ALBARRACIN MARCELO ANDRES","cuit":"20-94813197-9","iva":"Monotributista","email":"elianapampillo176@gmail.com","wsp":"3454946921","saludo":"Andres","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c122","nom":"SOSA ELSA BEATRIZ","cuit":"23-29005178-9","iva":"Monotributista","email":"beatrizcrack@gmail.com","wsp":"3454946921","saludo":"Beatriz","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c123","nom":"STIVANELLO, MAURICIO","cuit":"20-35129606-3","iva":"Responsable Inscripto","email":"mauricio.stivanello@almundofr.com","wsp":"3454946921","saludo":"Mauricio","imps":["IB.LOC.ERIOS","HON_PROF_LABORAL","HON_PROF_RI","AUTON.","IVA","LEYSOC_OSECC","GAN.PER.FIS.","LEYSOC_INCATUR","TASA CHAJARI","LEYSOC_CEC_CHA","LEYSOC_CEC_CON","TASA CONCORDIA","FAECYS","931_LSD"]},{"id":"c124","nom":"SUAREZ LUIS ALBERTO","cuit":"20-40161327-8","iva":"Monotributista","email":"luissuarez.serviciospap@gmail.com","wsp":"3454946921","saludo":"Alberto","imps":[]},{"id":"c125","nom":"TABENI MARIA FERNANDA","cuit":"27-31118116-0","iva":"Monotributista","email":"fernandatab@gmail.com","wsp":"3454946921","saludo":"Fernanda","imps":["PL.ERIOS","MONOT.","HON_PROF_MONO"]},{"id":"c126","nom":"TABENI MARIA INES","cuit":"27-32505165-0","iva":"Monotributista","email":"enriqueta.ropita@gmail.com","wsp":"3454946921","saludo":"Ines","imps":["HON_PROF_MONO","MONOT."]},{"id":"c127","nom":"TOLLER FRANCO CEFERINO","cuit":"20-44283479-3","iva":"Monotributista","email":"franco17toller@gmail.com","wsp":"3454946921","saludo":"Ceferino","imps":[]},{"id":"c128","nom":"TOLLER LUCAS","cuit":"20-37152485-2","iva":"Responsable Inscripto","email":"lucastolller@gmail.com","wsp":"3454946921","saludo":"Lucas","imps":[]},{"id":"c129","nom":"TONINA MARIANO","cuit":"20-38388249-5","iva":"Monotributista","email":"marianotonina0919@gmail.com","wsp":"3454946921","saludo":"Mariano","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c130","nom":"TORRES EDUARDO JAVIER","cuit":"23-32184547-9","iva":"Monotributista","email":"vidaltanner@gmail.com","wsp":"3454946921","saludo":"Javier","imps":["HON_PROF_MONO","MONOT."]},{"id":"c131","nom":"TOSI, LIDIA MARÍA EUGENIA","cuit":"27-28333412-6","iva":"Monotributista","email":"jesuspenayoamaya@gmail.com","wsp":"3454946921","saludo":"Eugenia","imps":["PL.ERIOS","HON_PROF_MONO","MONOT."]},{"id":"c132","nom":"UBEDA JUDITH MAGALI","cuit":"23-43113946-4","iva":"Monotributista","email":"anisaindumentariainfantil@gmail.com","wsp":"3454946921","saludo":"Magali","imps":[]},{"id":"c133","nom":"VARGAS MARIA MARCELA","cuit":"27-22496392-6","iva":"Monotributista","email":"","wsp":"3454946921","saludo":"Marcela","imps":["HON_PROF_MONO","MONOT."]},{"id":"c134","nom":"VEGA, ROXANA","cuit":"23-24487590-4","iva":"Monotributista","email":"vegaroxana768@gmail.com","wsp":"3454946921","saludo":"Roxana","imps":[]},{"id":"c135","nom":"VERONI EVELINA","cuit":"27-20527324-2","iva":"Monotributista","email":"evelinaveroni@hotmail.com","wsp":"3454946921","saludo":"Evelina","imps":["HON_PROF_MONO","MONOT.","SER.DOM.OBL.","TASA_FED_25DEM","PL.ERIOS","TASA_FED_BEL"]},{"id":"c136","nom":"VILLANUEVA, HUGO ROBERTO","cuit":"23-11810345-9","iva":"Responsable Inscripto","email":"hugorobertovillanueva@hotmail.com","wsp":"3454946921","saludo":"Roberto","imps":["IB.LOC.ERIOS","HON_PROF_RI","SER.DOM.OBL.","IVA","AUTON.","GAN.PER.FIS."]},{"id":"c137","nom":"WALINGRE NESTOR RENE","cuit":"20-16820261-0","iva":"Monotributista","email":"nere_2721@hotmail.com","wsp":"3454946921","saludo":"Rene","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c138","nom":"WALINGRE, SOFIA","cuit":"27-36646273-8","iva":"Monotributista","email":"sofiawalingre@gmail.com","wsp":"3454946921","saludo":"Sofia","imps":[]},{"id":"c139","nom":"YAÑEZ CESAR","cuit":"20-33825929-9","iva":"Monotributista","email":"cesar.yanez.mmo@gmail.com","wsp":"3454946921","saludo":"Cesar","imps":[]},{"id":"c140","nom":"ZAMPEDRI GUILLERMO SEBASTIAN","cuit":"20-32505207-5","iva":"Monotributista","email":"zampedriguillermosebastian@gmail.com","wsp":"3454946921","saludo":"Sebastian","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c141","nom":"ZANETTI, DANIEL ALBERTO","cuit":"20-20667515-3","iva":"Monotributista","email":"ernesto_zanetti@hotmail.com","wsp":"3454946921","saludo":"Alberto","imps":["HON_PROF_MONO","MONOT."]},{"id":"c142","nom":"ZANETTI, ERNESTO RAMON","cuit":"20-12337618-9","iva":"Monotributista","email":"ernesto_zanetti@hotmail.com","wsp":"3454946921","saludo":"Ramon","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c143","nom":"ZANETTI, VALERIA ALEJANDRA","cuit":"27-35716072-9","iva":"Monotributista","email":"valeria.zanetti22@gmail.com","wsp":"3454946921","saludo":"Alejandra","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c144","nom":"ZAUPA CLARISA BEATRIZ","cuit":"27-23210386-3","iva":"Monotributista","email":"gisu_marzo@hotmail.com","wsp":"3454946921","saludo":"Beatriz","imps":[]},{"id":"c145","nom":"ZILONI SERGIO RUBEN","cuit":"20-27337518-0","iva":"Monotributista","email":"sergio_ziloni@hotmail.com","wsp":"3454946921","saludo":"Ruben","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c146","nom":"HERZ SANDRO MANUEL","cuit":"20-31122738-7","iva":"Monotributista","email":"raquelcampedo@gmail.com","wsp":"3454946921","saludo":"Manuel","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c147","nom":"GONZALEZ ROXANA LAURA","cuit":"27-22841605-9","iva":"Monotributista","email":"roxi.1272@gmail.com","wsp":"3454946921","saludo":"Laura","imps":["HON_PROF_MONO","MONOT."]},{"id":"c148","nom":"CALVO AGUSTIN","cuit":"20-43633540-8","iva":"Responsable Inscripto","email":"","wsp":"3454946921","saludo":"Agustin","imps":["IB.LOC.ERIOS","HON_PROF_LABORAL","HON_PROF_RI","LEYSOC_GAS_2","LEYSOC_GAS_1","AUTON.","IVA","GAN.PER.FIS.","TASA CHAJARI","LEYSOC_GAS_3","931_LSD"]},{"id":"c149","nom":"FERNANDEZ MARIA JOSE","cuit":"23-37586525-4","iva":"Monotributista","email":"","wsp":"3454946921","saludo":"Jose","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c150","nom":"LIMA ROCIO SOLEDAD","cuit":"27-35464915-8","iva":"Monotributista","email":"limarocio@hotmail.com","wsp":"3454946921","saludo":"Soledad","imps":["HON_PROF_MONO","MONOT."]},{"id":"c151","nom":"SOSA AGUSTIN FRANCISCO","cuit":"20-37975350-8","iva":"Monotributista","email":"agustinsosa323@gmail.com","wsp":"3454946921","saludo":"Francisco","imps":["HON_PROF_MONO","MONOT."]},{"id":"c152","nom":"BLOCK GABRIEL ALEXIS","cuit":"20-34679152-8","iva":"Monotributista","email":"iturbef1@gmail.com","wsp":"3454946921","saludo":"Alexis","imps":["HON_PROF_MONO","MONOT."]},{"id":"c153","nom":"OJEDA HERNAN GABRIEL","cuit":"20-39195734-8","iva":"Monotributista","email":"larafavit14@gmail.com","wsp":"3454946921","saludo":"Gabriel","imps":["HON_PROF_MONO","MONOT."]},{"id":"c154","nom":"BENITEZ JESICA VANESA","cuit":"27-33216328-6","iva":"Monotributista","email":"jesi59@outlook.com","wsp":"3454946921","saludo":"Vanesa","imps":["HON_PROF_MONO","MONOT."]},{"id":"c155","nom":"WAISPROT AXEL LAUTARIO","cuit":"20-41630568-5","iva":"Monotributista","email":"","wsp":"3454946921","saludo":"Lautario","imps":["HON_PROF_MONO","MONOT."]},{"id":"c156","nom":"GONZALEZ MARTA RAQUEL","cuit":"27-21621027-7","iva":"Monotributista","email":"","wsp":"3454946921","saludo":"Raquel","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c157","nom":"GODOY JOSE MARIA","cuit":"23-26203800-9","iva":"Monotributista","email":"godoyjosemaria234@gmail.com","wsp":"3454946921","saludo":"Maria","imps":["HON_PROF_MONO","MONOT."]},{"id":"c158","nom":"DALMASO NICOLAS ALEJANDRO","cuit":"20-37975674-4","iva":"Monotributista","email":"","wsp":"3454946921","saludo":"Alejandro","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c159","nom":"DIMIER PATRICIA MARINA","cuit":"27-24732634-6","iva":"Monotributista","email":"GESTIONEMPRENDEDORABO@GMAIL.COM","wsp":"3454946921","saludo":"Marina","imps":["HON_PROF_MONO","MONOT."]},{"id":"c160","nom":"AGRUPACION AUTOS DE EPOCA CHAJARI","cuit":"30-71859604-8","iva":"Exento","email":"","wsp":"3454946921","saludo":"Chajari","imps":["INF.FISC"]},{"id":"c161","nom":"CENTRO SUBOFICIALES SARGENTO CABRAL","cuit":"30-71551571-3","iva":"Exento","email":"","wsp":"3454946921","saludo":"Centro Suboficiales Sargento Cabral","imps":["INF.FISC"]},{"id":"c162","nom":"BURNA ANA MELINA","cuit":"27-41119441-3","iva":"Monotributista","email":"","wsp":"3454946921","saludo":"Melina","imps":["HON_PROF_MONO","MONOT."]},{"id":"c163","nom":"LOPEZ XIMENA ESMERALDA","cuit":"27-41610487-0","iva":"Monotributista","email":"","wsp":"3454946921","saludo":"Esmeralda","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c164","nom":"SOTO WALTER DIEGO","cuit":"20-22496088-4","iva":"Monotributista","email":"","wsp":"3454946921","saludo":"Diego","imps":["HON_PROF_MONO","MONOT."]},{"id":"c165","nom":"CALVO LUIS MARIA","cuit":"20-05812395-2","iva":"Consumidor Final","email":"","wsp":"3454946921","saludo":"Maria","imps":["HON_PROF_LAB_CP","SER.DOM.OBL."]},{"id":"c166","nom":"LEZCANO LIDIA ELIZABET","cuit":"23-30993078-9","iva":"Monotributista","email":"","wsp":"3454946921","saludo":"Elizabet","imps":["HON_PROF_MONO","MONOT.","TASA CHAJARI"]},{"id":"c167","nom":"BENITEZ EMANUEL MATIAS","cuit":"20-39840878-1","iva":"Monotributista","email":"","wsp":"3454946921","saludo":"Matias","imps":["HON_PROF_MONO","MONOT."]},{"id":"c168","nom":"AMARILLO GUSTAVO ALEJANDRO","cuit":"20-22496353-0","iva":"Monotributista","email":"","wsp":"3454946921","saludo":"Alejandro","imps":["HON_PROF_MONO","MONOT."]},{"id":"c169","nom":"AURI MARIA GABRIELA","cuit":"27-28384919-3","iva":"Monotributista","email":"","wsp":"3454946921","saludo":"Gabriela","imps":["PL.ERIOS","HON_PROF_MONO","MONOT."]},{"id":"c170","nom":"GABRIELLI MARIA VERONICA","cuit":"27-22848025-3","iva":"Monotributista","email":"","wsp":"3454946921","saludo":"Veronica","imps":["HON_PROF_MONO","MONOT."]}];
 
 let clis=[],imps=[],recs=[],rcnt=1,editId=null,editImpId=null;
 
@@ -551,11 +623,23 @@ function load(){
   try{const r=localStorage.getItem('bo_r');if(r){const d=JSON.parse(r);recs=d.r;rcnt=d.c;}}catch(e){recs=[];rcnt=1;}
   if(imps.length===0){imps=DEF_IMPS.map(x=>({...x}));sI();}
   if(clis.length===0){clis=DEF_CLIS.map(x=>({...x}));sC();}
-  // Limpiar comas en nombres de clientes
+  // Limpiar comas en nombres y agregar saludo si no existe
+  const EMPRESAS_S=new Set(['SRL','SAS','SA','AC','CIVIL','SOCIEDAD','COOPERATIVA','ASOCIACION','FUNDACION','ESTUDIO','SUBOFICIALES','HERMANOS']);
+  const SKIP_S=new Set(['A.','B.','C.','D.','E.','DEL','DE','LA','LAS','LOS','Y','(HIJO)','(HIJA)']);
+  function sugerirSaludo(nom){
+    const n=nom.replace(/,/g,'').replace(/\s+/g,' ').trim();
+    const partes=n.toUpperCase().split(' ');
+    if(partes.some(p=>EMPRESAS_S.has(p))) return n.split(' ').map(w=>w.charAt(0).toUpperCase()+w.slice(1).toLowerCase()).join(' ');
+    const sig=partes.filter(p=>!SKIP_S.has(p)&&!/^\([A-Z]+\)$/.test(p)&&!/^[A-Z]\.$/.test(p));
+    const ultimo=sig.length?sig[sig.length-1]:partes[partes.length-1];
+    return ultimo.charAt(0).toUpperCase()+ultimo.slice(1).toLowerCase();
+  }
   let cliChanged=false;
   clis.forEach(c=>{
     const limpio=c.nom.replace(/,/g,'').replace(/\s+/g,' ').trim();
     if(limpio!==c.nom){c.nom=limpio;cliChanged=true;}
+    if(!c.saludo){c.saludo=sugerirSaludo(c.nom);cliChanged=true;}
+    if(!c.wsp){c.wsp='3454946921';cliChanged=true;} // número de prueba
   });
   if(cliChanged) sC();
   loadVto();
@@ -608,7 +692,7 @@ function rCli(){
     const obs=(c.imps||[]).slice(0,4).map(id=>{const i=imps.find(x=>x.id===id);return i?`<span class="badge bb">${i.abrev}</span>`:''}).join('');
     const mas=(c.imps||[]).length>4?`<span class="badge bgr">+${(c.imps||[]).length-4}</span>`:'';
     const warn=!(c.imps||[]).length?'<span class="badge ba">Sin obligaciones</span>':'';
-    return`<tr><td style="font-weight:500">${nomDisplay}</td><td style="font-family:monospace;font-size:12px">${c.cuit}</td><td><span class="badge ${fc[c.iva]||'bgr'}">${c.iva}</span></td><td style="font-size:12px">${c.email||'—'}</td><td>${warn}${obs}${mas}</td><td style="white-space:nowrap"><button class="btn bsm" onclick="openMC('${c.id}')"><i class="ti ti-edit"></i></button> <button class="btn bsm" onclick="delC('${c.id}')" style="color:var(--red)"><i class="ti ti-trash"></i></button></td></tr>`;
+    return`<tr><td style="font-weight:500">${nomDisplay}</td><td style="font-family:monospace;font-size:12px">${c.cuit}</td><td><span class="badge ${fc[c.iva]||'bgr'}">${c.iva}</span></td><td style="font-size:12px">${c.email||'—'}</td><td><input type="text" value="${c.saludo||''}" placeholder="Nombre saludo" style="width:90px;padding:3px 6px;font-size:12px" onchange="updateSaludo('${c.id}',this.value)" title="Nombre que aparece en el recordatorio de WhatsApp"></td><td>${warn}${obs}${mas}</td><td style="white-space:nowrap"><button class="btn bsm" onclick="openMC('${c.id}')"><i class="ti ti-edit"></i></button> <button class="btn bsm" onclick="delC('${c.id}')" style="color:var(--red)"><i class="ti ti-trash"></i></button></td></tr>`;
   }).join('');
 }
 
@@ -648,6 +732,23 @@ function applyAsig(){
 
 // IDs de obligaciones que copian importe del mes anterior
 const IMPS_CARRY = ['MONOT.','HON_PROF_MONO','HON_PROF_RI','HON_PROF_LABORAL','HON_PROF_LAB_CP'];
+
+// Obligaciones de mes corriente (período = mes de vencimiento)
+// Todas las demás son mes vencido (período = mes anterior al vencimiento)
+const IDS_MES_CORRIENTE = ['MONOT.'];
+
+function getPeriodo(impId, mes, anio){
+  // mes = 0-based (0=enero, 5=junio)
+  if(IDS_MES_CORRIENTE.includes(impId)){
+    // Mes corriente: período = mismo mes del vencimiento
+    return `${String(mes+1).padStart(2,'0')}/${anio}`;
+  } else {
+    // Mes vencido: período = mes anterior
+    const pm = mes === 0 ? 11 : mes - 1;
+    const pa = mes === 0 ? anio - 1 : anio;
+    return `${String(pm+1).padStart(2,'0')}/${pa}`;
+  }
+}
 
 // Estados posibles de cada item de agenda
 const ESTADOS = [
@@ -714,25 +815,206 @@ function setEstado(cid, impId, mes, anio, val){
   }
 }
 
+// ── FILTRO CLIENTE AGENDA (multi-select) ─────────────────────────
+let agCliSeleccionados = new Set(); // IDs seleccionados
+
+function toggleListaCli(){
+  const drop=document.getElementById('ag-cli-drop');
+  if(drop.style.display==='none'){
+    filtrarListaCli();
+    drop.style.display='block';
+    document.getElementById('ag-q-search')?.focus();
+  } else {
+    drop.style.display='none';
+  }
+}
+
+function filtrarListaCli(){
+  const q=(document.getElementById('ag-q-search')?.value||'').toLowerCase();
+  const lista=document.getElementById('ag-cli-lista');
+  if(!lista)return;
+  const sorted=[...clis].sort((a,b)=>a.nom.localeCompare(b.nom,'es'));
+  const filtrados=q?sorted.filter(c=>c.nom.toLowerCase().includes(q)):sorted;
+  lista.innerHTML=filtrados.map(c=>{
+    const sel=agCliSeleccionados.has(c.id);
+    return`<div class="cli-drop-item${sel?' selected':''}" onclick="toggleCliAg('${c.id}',event)">
+      <input type="checkbox" ${sel?'checked':''} style="width:auto;pointer-events:none;flex-shrink:0">
+      <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.nom}</span>
+    </div>`;
+  }).join('');
+}
+
+function toggleCliAg(id, e){
+  e?.stopPropagation();
+  if(agCliSeleccionados.has(id)) agCliSeleccionados.delete(id);
+  else agCliSeleccionados.add(id);
+  filtrarListaCli();
+  actualizarLabelCli();
+  rAg();
+}
+
+function selTodosCliAg(todos){
+  if(todos){
+    const q=(document.getElementById('ag-q-search')?.value||'').toLowerCase();
+    const filtrados=q?clis.filter(c=>c.nom.toLowerCase().includes(q)):clis;
+    filtrados.forEach(c=>agCliSeleccionados.add(c.id));
+  } else {
+    agCliSeleccionados.clear();
+  }
+  filtrarListaCli();
+  actualizarLabelCli();
+  rAg();
+}
+
+function actualizarLabelCli(){
+  const lbl=document.getElementById('ag-q-label');
+  if(!lbl)return;
+  if(agCliSeleccionados.size===0){
+    lbl.textContent='Todos los clientes';
+    lbl.style.color='var(--txt2)';
+  } else if(agCliSeleccionados.size===1){
+    const c=clis.find(x=>x.id===[...agCliSeleccionados][0]);
+    lbl.textContent=c?c.nom:'1 cliente';
+    lbl.style.color='var(--txt)';
+  } else {
+    lbl.textContent=`${agCliSeleccionados.size} clientes seleccionados`;
+    lbl.style.color='var(--green-lt)';
+  }
+}
+
+// Cerrar dropdown al hacer click fuera
+document.addEventListener('click', function(e){
+  const wrap=document.getElementById('ag-cli-drop')?.parentElement;
+  if(wrap && !wrap.contains(e.target)){
+    const drop=document.getElementById('ag-cli-drop');
+    if(drop) drop.style.display='none';
+  }
+});
+
+// ── FILTRO OBLIGACIÓN AGENDA (multi-select) ───────────────────────
+let agImpSeleccionados = new Set();
+
+function toggleListaImp(){
+  const drop=document.getElementById('ag-imp-drop');
+  if(drop.style.display==='none'){
+    filtrarListaImp();
+    drop.style.display='block';
+    document.getElementById('ag-fi-search')?.focus();
+  } else {
+    drop.style.display='none';
+  }
+}
+
+function filtrarListaImp(){
+  const q=(document.getElementById('ag-fi-search')?.value||'').toLowerCase();
+  const lista=document.getElementById('ag-imp-lista');
+  if(!lista)return;
+  const sorted=[...imps].sort((a,b)=>a.desc.localeCompare(b.desc,'es'));
+  const filtrados=q?sorted.filter(i=>i.desc.toLowerCase().includes(q)||i.abrev.toLowerCase().includes(q)):sorted;
+  lista.innerHTML=filtrados.map(i=>{
+    const sel=agImpSeleccionados.has(i.id);
+    return`<div class="cli-drop-item${sel?' selected':''}" onclick="toggleImpAg('${i.id}',event)">
+      <input type="checkbox" ${sel?'checked':''} style="width:auto;pointer-events:none;flex-shrink:0">
+      <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${i.desc}">${i.abrev} <span style="color:var(--txt2);font-size:10px">— ${i.desc}</span></span>
+    </div>`;
+  }).join('');
+}
+
+function toggleImpAg(id, e){
+  e?.stopPropagation();
+  if(agImpSeleccionados.has(id)) agImpSeleccionados.delete(id);
+  else agImpSeleccionados.add(id);
+  filtrarListaImp();
+  actualizarLabelImp();
+  rAg();
+}
+
+function selTodosImpAg(todos){
+  if(todos){
+    const q=(document.getElementById('ag-fi-search')?.value||'').toLowerCase();
+    const filtrados=q?imps.filter(i=>i.desc.toLowerCase().includes(q)||i.abrev.toLowerCase().includes(q)):imps;
+    filtrados.forEach(i=>agImpSeleccionados.add(i.id));
+  } else {
+    agImpSeleccionados.clear();
+  }
+  filtrarListaImp();
+  actualizarLabelImp();
+  rAg();
+}
+
+function actualizarLabelImp(){
+  const lbl=document.getElementById('ag-fi-label');
+  if(!lbl)return;
+  if(agImpSeleccionados.size===0){
+    lbl.textContent='Todas las obligaciones';
+    lbl.style.color='var(--txt2)';
+  } else if(agImpSeleccionados.size===1){
+    const i=imps.find(x=>x.id===[...agImpSeleccionados][0]);
+    lbl.textContent=i?i.abrev:'1 obligación';
+    lbl.style.color='var(--txt)';
+  } else {
+    lbl.textContent=`${agImpSeleccionados.size} obligaciones`;
+    lbl.style.color='var(--green-lt)';
+  }
+}
+
+// Cerrar dropdown obligaciones al hacer click fuera
+document.addEventListener('click', function(e){
+  const wrap=document.getElementById('ag-imp-drop')?.parentElement;
+  if(wrap && !wrap.contains(e.target)){
+    const drop=document.getElementById('ag-imp-drop');
+    if(drop) drop.style.display='none';
+  }
+});
+
+function limpiarFiltrosAg(){
+  agCliSeleccionados.clear();
+  agImpSeleccionados.clear();
+  actualizarLabelCli();
+  actualizarLabelImp();
+  if(document.getElementById('ag-q-search')) document.getElementById('ag-q-search').value='';
+  if(document.getElementById('ag-fi-search')) document.getElementById('ag-fi-search').value='';
+  document.getElementById('ag-per').value='';
+  document.getElementById('ag-imp-fil').value='';
+  rAg();
+}
+
 function rAg(){
   const mes=parseInt(document.getElementById('smes')?.value||new Date().getMonth());
-  const anio = new Date().getFullYear();
+  const anio=new Date().getFullYear();
   const q=(document.getElementById('ag-q')?.value||'').toLowerCase();
-  const fi=document.getElementById('ag-fi')?.value||'';
+  const fi=document.getElementById('ag-fi')?.value||''; // legacy fallback
+  const perFil=(document.getElementById('ag-per')?.value||'').trim();
+  const impFil=document.getElementById('ag-imp-fil')?.value||'';
   const hoy=new Date(),mh=hoy.getMonth(),dh=hoy.getDate();
   const agr={};
-  clis.filter(c=>!q||c.nom.toLowerCase().includes(q)).forEach(c=>{
+
+  // Filtro cliente: por IDs seleccionados o todos
+  const clisFiltrados = agCliSeleccionados.size > 0
+    ? clis.filter(c=>agCliSeleccionados.has(c.id))
+    : clis;
+
+  clisFiltrados.forEach(c=>{
     (c.imps||[]).forEach(id=>{
-      if(fi&&fi!==id)return;
+      // Filtro por obligación (multi-select)
+      if(agImpSeleccionados.size>0 && !agImpSeleccionados.has(id))return;
       const imp=imps.find(x=>x.id===id);if(!imp)return;
       const d=getVto(imp,mes,c.cuit);if(!d)return;
+      const periodo=getPeriodo(id,mes,anio);
+      // Filtro por período
+      if(perFil&&!periodo.includes(perFil))return;
+      // Filtro por importe
+      const monto=getImporte(c.id,id,mes,anio);
+      if(impFil==='sin'&&monto&&parseFloat(monto)>0)return;
+      if(impFil==='con'&&(!monto||parseFloat(monto)<=0))return;
       if(!agr[d])agr[d]=[];
-      agr[d].push({cid:c.id, c:c.nom, impId:id, imp:imp.abrev, cuit:c.cuit, wsp:c.wsp});
+      agr[d].push({cid:c.id, c:c.nom, impId:id, imp:imp.abrev, cuit:c.cuit, wsp:c.wsp, periodo});
     });
   });
   const dias=Object.keys(agr).map(Number).sort((a,b)=>a-b);
   let tot=0;dias.forEach(d=>tot+=agr[d].length);
-  document.getElementById('ag-tot').textContent=`${tot} vencimientos · ${MESES[mes]}`;
+  const filtrosActivos=[agCliSeleccionados.size>0,agImpSeleccionados.size>0,perFil,impFil].filter(Boolean).length;
+  document.getElementById('ag-tot').innerHTML=`<b>${tot} vencimiento(s)</b> · ${MESES[mes]} ${anio}${filtrosActivos?` · <span style="color:var(--amber)">${filtrosActivos} filtro(s) activo(s)</span>`:''}`;
   const ac=document.getElementById('ag-cont');
   if(!dias.length){ac.innerHTML='<div class="card"><div class="es">Sin vencimientos para este mes.</div></div>';return;}
   ac.innerHTML=dias.map(dia=>{
@@ -746,12 +1028,13 @@ function rAg(){
       </div>
       <table style="width:100%;table-layout:fixed">
         <thead><tr>
-          <th style="width:28%">Cliente</th>
-          <th style="width:13%">Obligación</th>
-          <th style="width:14%">Importe ($)</th>
-          <th style="width:24%">Estado</th>
+          <th style="width:26%">Cliente</th>
+          <th style="width:12%">Obligación</th>
+          <th style="width:10%">Período</th>
+          <th style="width:13%">Importe ($)</th>
+          <th style="width:22%">Estado</th>
           <th style="width:5%">WA</th>
-          <th style="width:16%;font-size:10px">CUIT</th>
+          <th style="width:12%;font-size:10px">CUIT</th>
         </tr></thead>
         <tbody>
         ${agr[dia].map(it=>{
@@ -763,6 +1046,7 @@ function rAg(){
           return`<tr>
             <td style="font-weight:500;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${it.c}">${it.c}</td>
             <td><span class="badge bb" style="font-size:10px">${it.imp}</span></td>
+            <td><span class="badge bgr" style="font-size:10px">${it.periodo}</span></td>
             <td>
               <input type="number" min="0" step="0.01"
                 value="${imp_val}"
@@ -788,53 +1072,218 @@ function rAg(){
 
 
 
+// ── RECORDATORIOS ────────────────────────────────────────────────
+let recsData = []; // cache de recordatorios generados
+
+function getRecEnviado(cid, mes, anio){
+  try{ return localStorage.getItem(`bo_rec_env_${cid}_${mes}_${anio}`) === '1'; }
+  catch(e){ return false; }
+}
+function setRecEnviado(cid, mes, anio){
+  try{ localStorage.setItem(`bo_rec_env_${cid}_${mes}_${anio}`, '1'); }
+  catch(e){}
+}
+
 function genRec(){
   const mes=parseInt(document.getElementById('smes')?.value||new Date().getMonth());
   const anio=new Date().getFullYear();
-  const agr={};
-
-  // Estados que SE INCLUYEN en el recordatorio
   const ESTADOS_INCLUIR = ['pendiente','impago'];
 
-  clis.forEach(c=>{
+  // Respetar filtros de clientes activos en la agenda
+  const clisFiltrados = agCliSeleccionados.size > 0
+    ? clis.filter(c=>agCliSeleccionados.has(c.id))
+    : clis;
+
+  const agr={};
+  clisFiltrados.forEach(c=>{
     (c.imps||[]).forEach(id=>{
       const imp=imps.find(x=>x.id===id);if(!imp)return;
       const d=getVto(imp,mes,c.cuit);if(!d)return;
       const monto=getImporte(c.id,id,mes,anio);
-      if(!monto||parseFloat(monto)<=0)return; // sin monto → no incluir
+      if(!monto||parseFloat(monto)<=0)return;
       const estado=getEstado(c.id,id,mes,anio);
-      if(!ESTADOS_INCLUIR.includes(estado))return; // pagado/pend_pago → no incluir
+      if(!ESTADOS_INCLUIR.includes(estado))return;
       if(!agr[c.id])agr[c.id]={c,items:[]};
       agr[c.id].items.push({
         imp:imp.abrev, desc:imp.desc, dia:d,
-        monto:parseFloat(monto), estado
+        monto:parseFloat(monto), estado,
+        periodo:getPeriodo(id,mes,anio)
       });
     });
   });
 
-  const ents=Object.values(agr).filter(e=>e.items.length>0);
+  recsData = Object.values(agr).filter(e=>e.items.length>0);
   const periodoStr=`${String(mes+1).padStart(2,'0')}/${anio}`;
 
-  document.getElementById('recs-c').innerHTML=ents.length?ents.map(e=>{
+  // Build message for each client
+  recsData.forEach(e=>{
     const nombreCompleto=e.c.nom.replace(/,/g,'').replace(/\s+/g,' ').trim();
+    const primerNombre=e.c.saludo||nombreCompleto.split(' ').pop();
     const itemsOrdenados=e.items.sort((a,b)=>a.dia-b.dia);
     const total=itemsOrdenados.reduce((s,i)=>s+i.monto,0);
     const lineas=itemsOrdenados.map(i=>
-      `• ${i.desc}: vence el ${i.dia} de ${MESES[mes]} — $${i.monto.toLocaleString('es-AR',{minimumFractionDigits:2})}`
+      `🔹 ${i.desc} (${i.periodo}): vence el ${i.dia} de ${MESES[mes]} — $${i.monto.toLocaleString('es-AR',{minimumFractionDigits:2})}`
     ).join('\n');
-    const txt=`Estimado/a ${nombreCompleto}:\n\nTe recordamos las obligaciones pendientes correspondientes al período ${periodoStr}:\n\n${lineas}\n\nTotal del período ${periodoStr}: $${total.toLocaleString('es-AR',{minimumFractionDigits:2})}\n\nCualquier consulta estamos a disposición.\nSaludos,\nBO Estudio Contable`;
-    const tel=e.c.wsp?e.c.wsp.replace(/\D/g,''):'';
-    const waLink=tel?`<a href="https://wa.me/54${tel}?text=${encodeURIComponent(txt)}" target="_blank" class="btn btnp bsm" style="text-decoration:none"><i class="ti ti-brand-whatsapp"></i> Enviar WA</a>`:'';
-    return`<div style="margin-bottom:16px;padding-bottom:14px;border-bottom:0.5px solid var(--bdr)">
-      <div style="font-size:13px;font-weight:500;margin-bottom:2px">${nombreCompleto}</div>
-      <div style="font-size:11px;color:var(--txt2);margin-bottom:6px">${e.items.length} obligación(es) · Total: <b style="color:var(--txt)">$${total.toLocaleString('es-AR',{minimumFractionDigits:2})}</b></div>
-      <div class="rb">${txt}</div>
-      <div style="display:flex;gap:6px">${waLink}<button class="btn bsm" onclick="cop(this,\`${txt.replace(/\\/g,'\\\\').replace(/`/g,"'")}\`)"><i class="ti ti-copy"></i> Copiar</button></div>
+    e.txt=`Hola ${primerNombre}, espero estés muy bien!\n\nTe recordamos las obligaciones pendientes correspondientes al período ${periodoStr}:\n\n${lineas}\n\n*Total del período ${periodoStr}: $${total.toLocaleString('es-AR',{minimumFractionDigits:2})}*\n\nCualquier duda que tengas, siempre nos podés consultar. *Estamos para acompañarte en tu negocio.*\n\nSaludos, Ale y Mabel\nBO Estudio Contable de PyMES y Emprendedores`;
+    e.tel=e.c.wsp?e.c.wsp.replace(/\D/g,''):'';
+    e.nombreCompleto=nombreCompleto;
+    e.total=total;
+    e.mes=mes;
+    e.anio=anio;
+    e.enviado=getRecEnviado(e.c.id,mes,anio);
+  });
+
+  renderRecsModal(mes, anio, periodoStr);
+  om('mo-recs');
+}
+
+function renderRecsModal(mes, anio, periodoStr){
+  const enviados=recsData.filter(e=>e.enviado).length;
+  document.getElementById('recs-t').textContent=`Recordatorios — ${MESES[mes]} ${anio} (${recsData.length} clientes)`;
+  document.getElementById('recs-estado').textContent=`${enviados} enviado(s) · ${recsData.length-enviados} pendiente(s)`;
+
+  document.getElementById('recs-c').innerHTML=recsData.length?recsData.map((e,idx)=>{
+    const waLink=e.tel?`<a href="https://wa.me/54${e.tel}?text=${encodeURIComponent(e.txt)}" target="_blank" class="btn btnp bsm" style="text-decoration:none" onclick="marcarEnviado(${idx})"><i class="ti ti-brand-whatsapp"></i> Enviar WA</a>`:'<span style="font-size:11px;color:var(--txt2)">Sin WhatsApp</span>';
+    return`<div id="rec-row-${idx}" style="margin-bottom:14px;padding:10px 12px;border-radius:var(--rad);border:0.5px solid ${e.enviado?'var(--green)':'var(--bdr)'};background:${e.enviado?'var(--green-l)':'var(--bg2)'}">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <input type="checkbox" class="rec-chk" data-idx="${idx}" ${e.enviado?'':'checked'} style="width:auto;cursor:pointer">
+        <span style="font-size:13px;font-weight:500;flex:1">${e.nombreCompleto}</span>
+        ${e.enviado?`<span class="badge bg"><i class="ti ti-check"></i> Enviado</span>`:'<span class="badge ba">Pendiente</span>'}
+        <span style="font-size:11px;color:var(--txt2)">${e.items.length} obligac. · $${e.total.toLocaleString('es-AR',{minimumFractionDigits:2})}</span>
+      </div>
+      <div class="rb" style="font-size:11px;max-height:80px;overflow:hidden;opacity:0.8">${e.txt}</div>
+      <div style="display:flex;gap:6px;margin-top:6px">
+        ${waLink}
+        <button class="btn bsm" onclick="cop(this,\`${e.txt.replace(/\\/g,'\\\\').replace(/`/g,"'")}\`)"><i class="ti ti-copy"></i> Copiar</button>
+        ${!e.enviado?`<button class="btn bsm" onclick="marcarEnviado(${idx})" style="color:var(--green)"><i class="ti ti-check"></i> Marcar enviado</button>`:`<button class="btn bsm" onclick="desmarcarEnviado(${idx})" style="color:var(--txt2)"><i class="ti ti-rotate"></i> Desmarcar</button>`}
+      </div>
     </div>`;
   }).join(''):'<div class="es">Sin obligaciones pendientes con monto cargado para este mes.</div>';
+}
 
-  document.getElementById('recs-t').textContent=`Recordatorios — ${MESES[mes]} ${anio} (${ents.length} cliente${ents.length!==1?'s':''})`;
-  om('mo-recs');
+function marcarEnviado(idx){
+  const e=recsData[idx];if(!e)return;
+  e.enviado=true;
+  setRecEnviado(e.c.id,e.mes,e.anio);
+  const row=document.getElementById(`rec-row-${idx}`);
+  if(row){
+    row.style.border='0.5px solid var(--green)';
+    row.style.background='var(--green-l)';
+    row.innerHTML=row.innerHTML
+      .replace('<span class="badge ba">Pendiente</span>',`<span class="badge bg"><i class="ti ti-check"></i> Enviado</span>`)
+      .replace(`<button class="btn bsm" onclick="marcarEnviado(${idx})" style="color:var(--green)"><i class="ti ti-check"></i> Marcar enviado</button>`,
+               `<button class="btn bsm" onclick="desmarcarEnviado(${idx})" style="color:var(--txt2)"><i class="ti ti-rotate"></i> Desmarcar</button>`);
+  }
+  actualizarEstadoRecs();
+}
+
+function desmarcarEnviado(idx){
+  const e=recsData[idx];if(!e)return;
+  e.enviado=false;
+  try{ localStorage.removeItem(`bo_rec_env_${e.c.id}_${e.mes}_${e.anio}`); }catch(ex){}
+  // Re-render the modal to refresh
+  const mes=e.mes,anio=e.anio;
+  const periodoStr=`${String(mes+1).padStart(2,'0')}/${anio}`;
+  renderRecsModal(mes,anio,periodoStr);
+}
+
+function actualizarEstadoRecs(){
+  const enviados=recsData.filter(e=>e.enviado).length;
+  const el=document.getElementById('recs-estado');
+  if(el) el.textContent=`${enviados} enviado(s) · ${recsData.length-enviados} pendiente(s)`;
+}
+
+function selAllRecs(v){
+  document.querySelectorAll('.rec-chk').forEach(cb=>cb.checked=v);
+}
+
+function filtrarNoEnviados(){
+  document.querySelectorAll('.rec-chk').forEach((cb,i)=>{
+    const idx=parseInt(cb.dataset.idx);
+    cb.checked=!recsData[idx]?.enviado;
+  });
+}
+
+let recEnvioQueue = [];
+let recEnvioIdx = 0;
+
+function enviarSiguiente(){
+  const seleccionados=[...document.querySelectorAll('.rec-chk:checked')].map(cb=>parseInt(cb.dataset.idx));
+  if(!seleccionados.length){alert('Seleccioná al menos un cliente');return;}
+
+  // Filtrar solo los que tienen teléfono
+  recEnvioQueue = seleccionados.filter(idx=>recsData[idx]?.tel);
+  if(!recEnvioQueue.length){
+    alert('Los clientes seleccionados no tienen número de WhatsApp cargado.');
+    return;
+  }
+  recEnvioIdx = 0;
+  abrirEnvioModal();
+}
+
+function abrirEnvioModal(){
+  if(recEnvioIdx >= recEnvioQueue.length){
+    // Terminó
+    actualizarEstadoRecs();
+    const periodoStr=`${String(recsData[0]?.mes+1).padStart(2,'0')}/${recsData[0]?.anio}`;
+    renderRecsModal(recsData[0]?.mes, recsData[0]?.anio, periodoStr);
+    alert(`✓ Envío completado. Se procesaron ${recEnvioQueue.length} recordatorio(s).`);
+    return;
+  }
+
+  const idx = recEnvioQueue[recEnvioIdx];
+  const e = recsData[idx];
+  const total = recEnvioQueue.length;
+  const actual = recEnvioIdx + 1;
+
+  // Update modal content to show current client
+  document.getElementById('recs-c').innerHTML = `
+    <div style="text-align:center;padding:10px 0 16px">
+      <div style="font-size:12px;color:var(--txt2);margin-bottom:8px">Enviando ${actual} de ${total}</div>
+      <div style="background:var(--bg2);border-radius:var(--rad);height:6px;margin-bottom:16px">
+        <div style="background:var(--green);height:6px;border-radius:var(--rad);width:${Math.round(actual/total*100)}%;transition:width .3s"></div>
+      </div>
+    </div>
+    <div style="background:var(--bg2);border-radius:var(--rad);padding:14px;margin-bottom:12px">
+      <div style="font-size:14px;font-weight:500;margin-bottom:4px">${e.nombreCompleto}</div>
+      <div style="font-size:12px;color:var(--txt2)">WhatsApp: +54 ${e.tel} · ${e.items.length} obligación(es) · $${e.total.toLocaleString('es-AR',{minimumFractionDigits:2})}</div>
+    </div>
+    <div class="rb" style="font-size:12px;margin-bottom:14px;max-height:160px;overflow-y:auto">${e.txt.replace(/\n/g,'<br>')}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <a href="https://wa.me/54${e.tel}?text=${encodeURIComponent(e.txt)}" target="_blank"
+        class="btn btnp" style="text-decoration:none;justify-content:center"
+        onclick="setTimeout(()=>mostrarBotonesPost(${idx}),1000)">
+        <i class="ti ti-brand-whatsapp"></i> Abrir WhatsApp
+      </a>
+      <button class="btn" onclick="saltarCliente(${idx})" style="color:var(--txt2)">
+        <i class="ti ti-player-skip-forward"></i> Saltar
+      </button>
+    </div>
+    <div id="post-envio-${idx}" style="display:none;margin-top:10px">
+      <div style="font-size:12px;color:var(--txt2);margin-bottom:8px;text-align:center">¿Pudiste enviar el mensaje?</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <button class="btn btnp bsm" onclick="confirmarEnvio(${idx})"><i class="ti ti-check"></i> Sí, enviado</button>
+        <button class="btn bsm" onclick="saltarCliente(${idx})"><i class="ti ti-x"></i> No, saltar</button>
+      </div>
+    </div>
+  `;
+  document.getElementById('recs-t').textContent=`Envío en progreso — ${actual}/${total}`;
+}
+
+function mostrarBotonesPost(idx){
+  const el=document.getElementById(`post-envio-${idx}`);
+  if(el) el.style.display='block';
+}
+
+function confirmarEnvio(idx){
+  marcarEnviado(idx);
+  recEnvioIdx++;
+  abrirEnvioModal();
+}
+
+function saltarCliente(idx){
+  recEnvioIdx++;
+  abrirEnvioModal();
 }
 function cop(btn,txt){navigator.clipboard.writeText(txt).then(()=>{btn.innerHTML='<i class="ti ti-check"></i> Copiado';setTimeout(()=>btn.innerHTML='<i class="ti ti-copy"></i> Copiar',2000);}).catch(()=>{prompt('Copiá el texto:',txt);});}
 
@@ -887,6 +1336,13 @@ function pRec(id){
 
 
 // Modal cliente
+async function updateSaludo(id, val){
+  const c=clis.find(x=>x.id===id);
+  if(!c)return;
+  c.saludo=val.trim();
+  sC();
+}
+
 function openMC(id=null){
   editId=id;
   document.getElementById('mc-t').textContent=id?'Editar cliente':'Nuevo cliente';
@@ -895,6 +1351,7 @@ function openMC(id=null){
   document.getElementById('c-c').value=c?.cuit||'';
   document.getElementById('c-e').value=c?.email||'';
   document.getElementById('c-w').value=c?.wsp||'';
+  document.getElementById('c-sal').value=c?.saludo||'';
   document.getElementById('c-i').value=c?.iva||'Monotributista';
   document.getElementById('ci-chk').innerHTML=imps.map(i=>{
     const s=c?.imps?.includes(i.id);
@@ -908,7 +1365,7 @@ function saveCli(){
   const nom=document.getElementById('c-n').value.trim(),cuit=document.getElementById('c-c').value.trim();
   if(!nom||!cuit){alert('Nombre y CUIT son obligatorios');return;}
   const ci=[...document.querySelectorAll('#ci-chk input:checked')].map(x=>x.value);
-  const obj={nom,cuit,iva:document.getElementById('c-i').value,email:document.getElementById('c-e').value.trim(),wsp:document.getElementById('c-w').value.trim(),imps:ci};
+  const obj={nom,cuit,iva:document.getElementById('c-i').value,email:document.getElementById('c-e').value.trim(),wsp:document.getElementById('c-w').value.trim(),saludo:document.getElementById('c-sal').value.trim(),imps:ci};
   if(editId){const idx=clis.findIndex(x=>x.id===editId);clis[idx]={...clis[idx],...obj};}
   else{clis.push({id:'c'+Date.now(),...obj});}
   sC();cm('mo-cli');rAll();
@@ -1161,6 +1618,7 @@ function getPagosItems(soloFiltro){
         cn: rec.cn,
         cc: rec.cc,
         pe: rec.pe,
+        periodoOblig: getPeriodo(it.id, mes, anio),
         fe: rec.fe,
         mes, anio,
         impId: it.id,
@@ -1210,7 +1668,7 @@ function rPagos(){
         ${it.estado==='pagado'||it.estado==='pago_cliente'?'disabled':''}></td>
       <td style="font-size:12px;white-space:nowrap">${it.fe}</td>
       <td style="font-size:12px;font-weight:500">${it.cn}</td>
-      <td style="font-size:12px">${it.pe}</td>
+      <td><span class="badge bgr" style="font-size:10px">${it.periodoOblig}</span></td>
       <td><span class="badge bb" style="font-size:10px">${it.abrev}</span></td>
       <td><span class="badge ${it.esHon?'bp':'bg'}" style="font-size:10px">${it.esHon?'Propio':'Terceros'}</span></td>
       <td style="text-align:right;font-weight:500;font-size:13px">$${it.mo.toLocaleString('es-AR',{minimumFractionDigits:2})}</td>
@@ -1617,16 +2075,24 @@ function loadVto(){
 }
 
 function buildDefaultVto(imp){
-  // Genera 12 meses x 3 grupos a partir de la config actual del impuesto
+  // Genera 12 meses x 10 terminaciones (0-9)
   const tabla = [];
   for(let m=0; m<12; m++){
     if(imp.tipo === 'arca' && VARCA[imp.arcaKey]){
       const fila = VARCA[imp.arcaKey][m] || [null,null,null];
-      tabla.push([fila[0]??null, fila[1]??null, fila[2]??null]);
+      // Expandir grupos a terminaciones individuales
+      // grupo 0 (fila[0]) → terminaciones 0,1,2,3
+      // grupo 1 (fila[1]) → terminaciones 4,5,6
+      // grupo 2 (fila[2]) → terminaciones 7,8,9
+      tabla.push([
+        fila[0]??null, fila[0]??null, fila[0]??null, fila[0]??null,
+        fila[1]??null, fila[1]??null, fila[1]??null,
+        fila[2]??null, fila[2]??null, fila[2]??null
+      ]);
     } else if(imp.tipo === 'fijo' && imp.dia){
-      tabla.push([imp.dia, imp.dia, imp.dia]);
+      tabla.push(Array(10).fill(imp.dia));
     } else {
-      tabla.push([null, null, null]);
+      tabla.push(Array(10).fill(null));
     }
   }
   return tabla;
@@ -1638,7 +2104,13 @@ function saveVto(){
     if(!VTO[imp.id]) return;
     if(imp.tipo === 'arca' && VARCA[imp.arcaKey]){
       for(let m=0; m<12; m++){
-        VARCA[imp.arcaKey][m] = VTO[imp.id][m] ? [...VTO[imp.id][m]] : [null,null,null];
+        const fila = VTO[imp.id][m];
+        if(fila && fila.length === 10){
+          // Convertir 10 terminaciones de vuelta a 3 grupos para VARCA (usando t0, t4, t7)
+          VARCA[imp.arcaKey][m] = [fila[0], fila[4], fila[7]];
+        } else if(fila && fila.length === 3){
+          VARCA[imp.arcaKey][m] = [...fila];
+        }
       }
     }
     if(imp.tipo === 'fijo'){
@@ -1679,7 +2151,6 @@ function rVto(){
   const imp = imps.find(x=>x.id===id);
   if(!imp) return;
 
-  // Asegurar que VTO tenga entrada para este impuesto
   if(!VTO[id]) VTO[id] = buildDefaultVto(imp);
 
   const esFijo = imp.tipo === 'fijo';
@@ -1690,14 +2161,14 @@ function rVto(){
       <div>
         <div style="font-size:15px;font-weight:500">${imp.abrev} — ${imp.desc}</div>
         <div style="font-size:12px;color:var(--txt2);margin-top:3px">
-          ${esFijo ? 'Día fijo — podés editar el día para cada mes individualmente' : esManual ? 'Obligación manual — cargá los días que correspondan' : 'Vencimiento por terminación de CUIT — editá cada grupo por separado'}
+          ${esFijo ? 'Día fijo — mismo día para todas las terminaciones de CUIT' : esManual ? 'Obligación manual — cargá los días que correspondan' : 'Vencimiento por terminación de CUIT — editá cada terminación individualmente'}
         </div>
       </div>
       <button class="btn btnp bsm" onclick="saveVto()"><i class="ti ti-device-floppy"></i> Guardar cambios</button>
     </div>`;
 
   if(esFijo){
-    // Para día fijo: una sola columna "Día" pero podés personalizar por mes
+    // Día fijo: una sola columna, aplica a todos los CUITs
     html += `<div style="overflow-x:auto"><table style="min-width:320px">
       <thead><tr>
         <th style="width:130px">Mes</th>
@@ -1717,30 +2188,33 @@ function rVto(){
     });
     html += `</tbody></table></div>`;
   } else {
-    // Para ARCA y manuales: 3 columnas por terminación de CUIT
-    html += `<div style="overflow-x:auto"><table style="min-width:480px">
+    // ARCA y manuales: 10 columnas individuales (terminación 0 a 9)
+    html += `<div style="overflow-x:auto"><table style="min-width:780px">
       <thead><tr>
-        <th style="width:120px">Mes</th>
-        <th><span class="badge bb">CUIT 0–3</span></th>
-        <th><span class="badge bg">CUIT 4–6</span></th>
-        <th><span class="badge bp">CUIT 7–9</span></th>
+        <th style="width:100px">Mes</th>
+        ${[0,1,2,3,4,5,6,7,8,9].map(t=>`<th style="text-align:center"><span class="badge ${t<=3?'bb':t<=6?'bg':'bp'}" style="font-size:10px">…${t}</span></th>`).join('')}
       </tr></thead><tbody>`;
     MESES.forEach((mes,mi)=>{
-      const fila = VTO[id][mi] || [null,null,null];
+      const fila = VTO[id][mi] || Array(10).fill(null);
       html += `<tr><td style="font-weight:500;font-size:13px">${mes}</td>`;
-      [0,1,2].forEach(gi=>{
-        const v = fila[gi]!==null&&fila[gi]!==undefined ? fila[gi] : '';
+      [0,1,2,3,4,5,6,7,8,9].forEach(t=>{
+        const v = fila[t]!==null&&fila[t]!==undefined ? fila[t] : '';
         html += `<td><input type="number" min="1" max="31"
           value="${v}" placeholder="—"
-          style="width:70px;text-align:center;padding:5px 8px;font-size:13px"
-          oninput="setVtoGrupo('${id}',${mi},${gi},this.value)"></td>`;
+          style="width:54px;text-align:center;padding:4px 4px;font-size:12px"
+          oninput="setVtoTerminacion('${id}',${mi},${t},this.value)"></td>`;
       });
       html += `</tr>`;
     });
-    html += `</tbody></table></div>`;
+    html += `</tbody></table></div>
+    <div style="margin-top:8px;font-size:11px;color:var(--txt2)">
+      <span class="badge bb" style="font-size:10px">…0–3</span> grupo A &nbsp;
+      <span class="badge bg" style="font-size:10px">…4–6</span> grupo B &nbsp;
+      <span class="badge bp" style="font-size:10px">…7–9</span> grupo C
+    </div>`;
   }
 
-  html += `<div style="margin-top:14px;padding:10px 12px;background:var(--bg2);border-radius:var(--rad);font-size:12px;color:var(--txt2)">
+  html += `<div style="margin-top:12px;padding:10px 12px;background:var(--bg2);border-radius:var(--rad);font-size:12px;color:var(--txt2)">
     <i class="ti ti-info-circle"></i> Dejá el campo vacío si la obligación no vence ese mes. Los cambios se aplican a la agenda al guardar.
   </div></div>`;
 
@@ -1750,24 +2224,49 @@ function rVto(){
 function setVtoFijo(id, mes, val){
   if(!VTO[id]) return;
   const d = val===''||val===null ? null : parseInt(val);
-  VTO[id][mes] = [d, d, d]; // mismo día para los 3 grupos
+  VTO[id][mes] = Array(10).fill(d); // mismo día para las 10 terminaciones
 }
 
+function setVtoTerminacion(id, mes, terminacion, val){
+  if(!VTO[id]) return;
+  if(!VTO[id][mes]) VTO[id][mes] = Array(10).fill(null);
+  // Si el array tiene 3 elementos (formato viejo), expandir a 10
+  if(VTO[id][mes].length === 3){
+    const [g0,g1,g2] = VTO[id][mes];
+    VTO[id][mes] = [g0,g0,g0,g0, g1,g1,g1, g2,g2,g2];
+  }
+  VTO[id][mes][terminacion] = val===''||val===null ? null : parseInt(val);
+}
+
+// legacy - mantener compatibilidad
 function setVtoGrupo(id, mes, grupo, val){
   if(!VTO[id]) return;
-  if(!VTO[id][mes]) VTO[id][mes] = [null,null,null];
-  VTO[id][mes][grupo] = val===''||val===null ? null : parseInt(val);
+  if(!VTO[id][mes]) VTO[id][mes] = Array(10).fill(null);
+  const d = val===''||val===null ? null : parseInt(val);
+  // grupo 0 = terminaciones 0-3, grupo 1 = 4-6, grupo 2 = 7-9
+  const rangos = [[0,1,2,3],[4,5,6],[7,8,9]];
+  (rangos[grupo]||[]).forEach(t=>{ VTO[id][mes][t] = d; });
 }
 
 // Override getVto para usar la tabla VTO editable
 function getVto(imp, mes, cuit){
-  const g = cg(cuit);
+  const s = cuit.replace(/\D/g,'');
+  const t = parseInt(s.slice(-1)); // terminación exacta 0-9
   if(VTO[imp.id] && VTO[imp.id][mes]){
-    const d = VTO[imp.id][mes][g];
+    const fila = VTO[imp.id][mes];
+    // Si el array tiene 10 elementos, usar terminación exacta
+    if(fila.length === 10){
+      const d = fila[t];
+      return d !== null && d !== undefined ? d : null;
+    }
+    // Compatibilidad con formato viejo de 3 grupos
+    const g = t<=3?0:t<=6?1:2;
+    const d = fila[g];
     return d !== null && d !== undefined ? d : null;
   }
   // Fallback al comportamiento original
   if(imp.tipo==='arca' && VARCA[imp.arcaKey]){
+    const g = t<=3?0:t<=6?1:2;
     return VARCA[imp.arcaKey][mes] ? VARCA[imp.arcaKey][mes][g] : null;
   }
   if(imp.tipo==='fijo') return imp.dia||null;
